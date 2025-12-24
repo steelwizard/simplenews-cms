@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    <form form method="post" th:action="@{${action}+'?id='+${post.id}+'&del=true'}" th:object="${post}">
+        <h2>Delete Post</h2>
+        <br>
+        Do you really want to delete the post <b>[[${post.title}]]</b>?<br>
+        [ <button type="submit">Yes</button>&nbsp;|&nbsp;<a th:href="@{/_private/admin/post-overview.html}"><button type="button">No</button></a> ]
+    </form>
+    <hr>
+
+    <div class="news-article">
+        <h3>[[${post.title}]]</h3>
+        <div class="article-info">[[${post.created}]] &nbsp; Author: [[${post.creator}]]</div>
+        <div class="article-content" th:utext="${post.content}"></div>
+    </div>
+</body>
+</html>

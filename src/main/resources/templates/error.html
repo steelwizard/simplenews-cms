@@ -1,0 +1,15 @@
+<html lang="en">
+    <head>
+        <title>Error</title>
+        <meta charset="UTF-8">
+        <link th:href="@{/css/style.css}" rel="stylesheet" />
+    </head>
+    <body>
+        <div class="flex">
+            [&nbsp;<a th:href="@{/news/index.html}">Home</a>&nbsp;]
+            <hr>
+            <h1 th:text="${'Error ' + status + ': ' + error}"></h1>
+        </div>
+
+    </body>
+</html>

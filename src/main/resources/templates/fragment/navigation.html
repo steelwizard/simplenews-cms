@@ -1,0 +1,4 @@
+<section th:fragment="navigation">
+        <section th:insert="~{@{admin/category-fragment.html} :: category}"
+                 th:with="maincategories=${categories}"></section>
+</section>

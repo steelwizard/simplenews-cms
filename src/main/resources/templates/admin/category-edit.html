@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    <form form method="post" th:action="@{/_private/admin/category-edit.html}" th:object="${category}" >
+        <br>ID: <input id="id-input" th:field="*{id}" readonly><br>
+        <label for="title-input">Title:</label>
+        <input id="title-input" th:field="*{title}"/>
+        <br>
+        <label for="name-input">Name:</label>
+        <input id="name-input" th:field="*{name}"/>
+        <label for="parent-select">Parent: </label>
+        <select id="parent-select" th:field="*{parent}">
+            <option th:value="${null}">---root category---</option>
+            <option th:each="current : ${categories}"
+                    th:value="${current.id}"
+                    th:text="${current.name}">
+            </option>
+        </select>
+        <br>
+        <label for="visible-input">Visible:</label>
+        <input id="visible-input" type="checkbox" th:field="*{visible}"/>
+        <br>
+        Meta-Keywords: <input id="meta-keywords-input" type="text" th:field="*{metaKeywords}">
+        Meta-Description: <input id="meta-description-input" type="text" th:field="*{metaDescription}">
+        <br>
+        <label for="type-select">Type: </label>
+        <select id="type-select" th:field="*{type}">
+            <option value="NEWS">NEWS</option>
+        </select>
+        <br>
+        [&nbsp;
+        <button type="submit">
+        Save
+        </button>
+        &nbsp;|&nbsp;
+        <a th:href="@{/_private/admin/category-overview.html}">
+            <button type="button">
+                Back</button>
+        </a>&nbsp;]
+        <br><br>
+        <a style="color:red" th:href="@{category-delete.html?id={id}(id=${category.id})}">Delete</a>
+    </form>
+</body>
+</html>

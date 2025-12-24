@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>User Categories</title>
+</head>
+<body>
+    <form form method="post" th:action="@{'/_private/admin/ucategory.html'+'?u='+${username}}">
+       <fieldset>
+        <table>
+            <tr th:each="cat : ${allCategories}">
+                <td>
+                    <input name="enabled" type="checkbox" th:value="${cat.getId()}"
+                           th:checked="${userCategories.get(cat)}">
+                </td>
+                <td>
+                    <span name="name" th:text="${cat.getName()}"></span></input>
+                </td>
+                <td><span th:text="${userCategories.get(cat)}"></span></td>
+            </tr>
+        </table>
+       </fieldset>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

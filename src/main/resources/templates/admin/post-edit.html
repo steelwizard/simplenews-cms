@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+    [ <a th:href="@{/_private/admin/post-overview.html}">Back</a> ]
+    <hr>
+    <form th:action="@{${action}}" th:object="${post}" method="POST">
+        Title: <input type="text" name="title" th:value="${post.title}"><br>
+        Key: <input type="text" name="key" th:value="${post.key}"><br>
+        Visible: <input type="checkbox" name="visible" th:checked="${post.visible}"><br>
+        <textarea cols="80" rows="30" name="content">[[${post.content}]]</textarea>
+        <br>
+        Category: <select th:field="*{category}">
+            <option th:each="current : ${categories}"
+                    th:value="${current.name}"
+                    th:text="${current.name}">
+            </option>
+        </select>
+        <br>
+        Meta-Keywords: <input type="text" th:value="${post.metaKeywords}">
+        Meta-Description: <input type="text" th:value="${post.metaDescription}">
+        <br>
+        <button th:formaction="@{${action}+'?action=0'}">Save</button>
+        &nbsp;|
+        &nbsp;<button th:formaction="@{${action}+'?action=1'}">Preview</button>
+        &nbsp;|
+        &nbsp;<button th:formaction="@{${action}+'?action=2'}">Delete</button>
+
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="id" th:value="${post.id}"/>
+    </form>
+
+    <hr>
+
+    <div class="news-article">
+        <h3>[[${post.title}]]</h3>
+        <div class="article-info">[[${post.created}]] &nbsp; Author: [[${post.creator}]]</div>
+        <div class="article-content" th:utext="${post.content}"></div>
+    </div>
+
+</body>
+</html>

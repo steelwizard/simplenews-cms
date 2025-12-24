@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+    <section th:insert="~{@{admin/admin-navigation.html} :: admin-navigation}"></section>
+    <section th:insert="~{@{admin/admin-category-fragment.html} :: category}" th:with="maincategories=${categories}"></section>
+
+    <hr>
+    <a th:href="@{/_private/admin/category-create.html}">Create new Category</a>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    <section th:insert="~{@{admin/admin-navigation} :: admin-navigation}"></section>
+
+    [ <a th:href="@{/_private/admin/post-create.html}">New Post</a> ]
+    <br><br>
+    <table border="1">
+        <tr>
+            <th>Title</th>
+            <th>Created</th>
+            <th>Author</th>
+            <th>Id</th>
+            <th>Key</th>
+            <th>Category</th>
+            <th>Edit</th>
+            <th>Delete</th>
+            <th>Published</th>
+        </tr>
+        <tr th:each="post : ${newslist}">
+            <td><b>[[${post.title}]]</b></td>
+            <td>[[${post.created}]]</td>
+            <td>[[${post.creator}]]</td>
+            <td>#[[${post.id}]]</td>
+            <td>[[${post.key}]]</td>
+            <td>[[${post.category}]]</td>
+            <td><a th:href="@{/_private/admin/post-edit.html?id={id}(id=${post.id})}">Edit</a></td>
+            <td><a th:href="@{/_private/admin/post-delete.html?id={id}(id=${post.id})}">Delete</a></td>
+            <td><input type=checkbox th:checked="${post.visible}" disabled></td>
+        </tr>
+    </table>
+    <div>
+        <hr>
+        <a th:href="${'?p='}+${page-1}" th:if="${page>0}">Back</a> |
+        Page [[${page}]]
+        |<a th:href="${'?p='}+${page+1}" th:if="${hasNextPage}">Next</a>
+    </div>
+
+</body>
+</html>

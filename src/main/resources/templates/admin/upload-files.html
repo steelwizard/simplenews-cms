@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <title th:text="${title}"></title>
+        <link th:href="@{/css/style.css}" rel="stylesheet" />
+    </head>
+
+    <body>
+        <section th:insert="~{@{admin/admin-navigation} :: admin-navigation}"></section>
+
+        <form method="post" th:action="@{/_private/admin/upload.html}" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/*">
+            <br>
+            <button type="submit">Upload</button>
+        </form>
+    <hr>
+
+    <table>
+        <tr>
+            <th>Uploads</th>
+        </tr>
+        <tr th:each="file : ${uploadFiles}">
+            <td>
+                <img th:src="${'/media/'}+${file.link}" class="image-300">
+            </td>
+            <td>
+                filename: [[${file.filename}]] <br>
+                <a th:href="${'/media/'}+${file.link}">
+                    [[${'/media/'}+${file.link}]]
+                </a>
+                <br>
+                created: [[${file.created}]]
+                <br>
+                created: [[${file.creator}]]
+            </td>
+        </tr>
+    </table>
+    <div th:if="${page>-1 && !uploadFiles.isEmpty()}">
+        <hr>
+        <a th:href="${'?p='}+${page-1}" th:if="${page>0}">Back</a>&nbsp;|&nbsp;
+        &nbsp;Page [[${page}]]&nbsp;
+        |&nbsp;<a th:href="${'?p='}+${page+1}" th:if="${hasNextPage}">Next</a>
+    </div>
+    </body>
+</html>

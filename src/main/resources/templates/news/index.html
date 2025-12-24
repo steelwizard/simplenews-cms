@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="keywords" th:content="${metaKeywords}">
+        <meta name="description" th:content="${metaDescription}">
+
+        <title th:text="${title}"></title>
+        <link th:href="@{/css/style.css}" rel="stylesheet" />
+        <link rel="canonical" th:href="@{${canonicalLink}}"/>
+    </head>
+    <body class="flex">
+        <div class="header">
+            <div th:insert="~{@{fragment/header-navigation}::header-navigation}" class="header-navigation"></div>
+            <a th:href="@{/news/index.html}">
+                <h1>News</h1>
+            </a>
+            <h2 th:text="${title}"></h2>
+
+        </div>
+        <div class="main-container">
+            <div th:insert="~{@{fragment/category-fragment.html} :: category}" th:with="maincategories=${categories}" class="navigation"></div>
+            <div class="news-container">
+                <div th:each="post : ${newslist}" class="news-article">
+
+                    <div class="article-info">
+                        <span>
+                          <a class="headline" th:href="@{/news/{id}-{key}.html(id=${post.id}, key=${post.key})}">
+                            [[${post.title}]]
+                          </a>
+                        </span>&nbsp;
+                        <span class="article-info-meta">
+                          [[${post.creator}]]
+                        </span>&nbsp;
+                        <span class="article-info-meta">
+                          ([[${post.created}]])
+                        </span>
+                    </div>
+                    <div class="article-content" th:utext="${post.content}"></div>
+
+                </div>
+                <div class="news-container" th:if="${newslist.isEmpty()}">
+                    No results found.
+                </div>
+                <hr>
+                <div class="clearfix">
+                    <span th:if="${page>-1 && !newslist.isEmpty()}">
+                        <a th:href="${'?p='}+${page-1}" th:if="${page>0}">Back</a>&nbsp;|&nbsp;
+                        &nbsp;Page [[${page}]]&nbsp;
+                        |&nbsp;<a th:href="${'?p='}+${page+1}" th:if="${hasNextPage}">Next</a>
+                    </span>
+                    <span class="align-right">
+                        Permalink: <a th:href="@{${permaLink}}">[[${permaLink}]]</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

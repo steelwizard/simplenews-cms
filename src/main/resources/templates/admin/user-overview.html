@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    <section th:insert="~{@{admin/admin-navigation} :: admin-navigation}"></section>
+    [ <a th:href="@{/_private/admin/user-create.html}">New User</a> ]
+    <table>
+        <tr>
+            <th>username</th>
+            <th>displayName</th>
+            <th>email</th>
+            <th>active</th>
+            <th>role</th>
+            <th>created</th>
+            <th>lastModified</th>
+        </tr>
+        <tr th:each="user : ${userlist}">
+            <td><a th:href="@{/_private/admin/user-edit.html?id={id}(id=${user.id})}">[[${user.username}]]</a></td>
+            <td th:text="${user.displayName}"></td>
+            <td th:text="${user.email}"></td>
+            <td th:text="${user.active}"></td>
+            <td th:text="${user.role}"></td>
+            <td th:text="${user.created}"></td>
+            <td th:text="${user.lastModified}"></td>
+        </tr>
+    </table>
+
+</body>
+</html>

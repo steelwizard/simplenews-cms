@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+    <h3 th:if="${!isNewUser}">Edit user</h3>
+    <h3 th:if="${isNewUser}">Create user</h3>
+
+    <p th:text="${error}" ></p>
+    <p th:text="${success}"></p>
+
+    <form method="post" th:action="${action}" th:object="${user}" autocomplete="off">
+        <label for="username-input">Username</label>
+        <input id="username-input" type="text" th:field="*{username}" th:readonly="${!isNewUser}"/>
+        <br>
+        <label for="password-input">Password</label>
+        <input id="password-input" type="password" th:field="*{password}"/>
+        <br>
+        <label for="password-input">Confirm password</label>
+        <input id="password-confirm-input" type="password"  th:field="*{passwordConfirm}"/>
+        <br>
+        <label for="email-input">email</label>
+        <input id="email-input" type="text" th:field="*{email}"/>
+        <br>
+        <label for="display-name-input">Display name</label>
+        <input id="display-name-input" type="text" th:field="*{displayName}"/>
+        <br>
+        <label for="role-input">Role</label>
+        <select id="role-input" th:field="*{role}">
+            <option th:each="userRole : ${roles}"
+                    th:value="${userRole.label}"
+                    th:text="${userRole}">
+            </option>
+        </select>
+        <br><a th:if="${!isNewUser}" th:href=${'/_private/admin/ucategory.html?u='}+*{username}>Edit User Categories</a>
+        <br>
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        [ <a href="user-overview.html">Back</a> |
+        &nbsp;
+        <button>Save</button> ]
+    </form>
+
+</body>
+</html>

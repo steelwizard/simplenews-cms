@@ -1,0 +1,8 @@
+<section th:fragment="admin-navigation">
+    [ <a th:href="@{/_private/admin/post-overview.html}">Posts</a> |
+    <span sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="@{/_private/admin/user-overview.html}">Users</a> |</span>
+    <span sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="@{/_private/admin/category-overview.html}">Categories</a> |</span>
+    <a th:href="@{/_private/admin/upload-files.html}">Upload Files</a> ]
+    &nbsp; [ <a th:href="@{/}">Home</a> | <a th:href="@{/_private/admin/profile.html}">My Profile</a> | <a th:href="@{/logout}">Logout</a> ]
+    <hr>
+</section>

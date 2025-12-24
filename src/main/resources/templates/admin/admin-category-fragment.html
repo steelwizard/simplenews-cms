@@ -1,0 +1,10 @@
+<section th:fragment="category">
+    <ul>
+        <li th:each="cat : ${maincategories}">
+            <a th:href="@{category-edit.html?id={id}(id=${cat.id})}">
+                [[${cat.getName}]]
+            </a>
+            <section th:insert="~{@{admin/admin-category-fragment.html} :: category}" th:with="maincategories=${cat.getChildren()}"></section>
+        </li>
+    </ul>
+</section>

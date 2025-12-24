@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+    <form form method="post" th:action="@{/_private/admin/category-delete.html}+'?id='+${category.id}" th:object="${category}" >
+        <p>Really delete this Category?</p><br>
+        <br>
+        ID: [[*{id}]] <br>
+        Name: [[*{name}]]
+        <br>
+        <button type="submit">Yes</button>
+        &nbsp;|&nbsp;
+        <a th:href="@{/_private/admin/category-overview.html}">No</a>
+    </form>
+
+</body>
+</html>
