@@ -33,3 +33,22 @@ Either way, the application should now be reachable at `localhost:8080`
 ## Admin control panel
 navigate to `localhost:8080/_private/admin` to access the ACP.
 A standard user is generated with username and password admin.
+
+It has the following sections:
+
+* **Posts:** create and edit posts.
+
+* **Categories:** Manage your categories and assign them to users.
+
+* **Users:** Manage user accounts
+
+* **Upload Files:** Upload Files for your articles
+
+* **My Profile:** Edit your own profile
+
+## Roles
+
+* **Registered:** New user, cannot do anything yet
+* **User:** Can create posts in assigned categories. Can edit own posts.
+* **Editor** Can create posts and edit everyone's posts in assigned categories.
+* **Admin** Can create and edit all posts in all categories. Can manage system settings.
