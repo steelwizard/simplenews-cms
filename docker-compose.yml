@@ -26,6 +26,7 @@ services:
       volumes:
         - ./_data/postgres/:/var/lib/postgresql/
         - ./sql/news-init.sql:/docker-entrypoint-initdb.d/init.sql
+      restart: always
       networks:
         - cms
 
