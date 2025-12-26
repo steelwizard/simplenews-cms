@@ -104,7 +104,7 @@ public class CategoryService implements ICategoryService {
 		return new CategoryDto(categoryRepository.getReferenceById(id));
 	}
 
-	@CacheEvict(cacheNames={"category, categoryDto, rootCategory"}, allEntries = true)
+	@CacheEvict(cacheNames={"category", "categoryDto", "rootCategory"}, allEntries = true)
 	public ICategoryDto saveCategory(ICategoryDto categoryDto, String user) {
 		Category category;
 		LOG.info("saving category "+categoryDto.getName());
@@ -140,7 +140,7 @@ public class CategoryService implements ICategoryService {
 
 	@Transactional
 	@Override
-	@CacheEvict(cacheNames={"category, categoryDto, rootCategory"}, allEntries = true)
+	@CacheEvict(cacheNames={"category", "categoryDto", "rootCategory"}, allEntries = true)
 	public void deleteCategory(Long id) {
 		categoryRepository.makeRootCategoryIfChildOf(id);
 		List<Category> categoryList = categoryRepository.findAll();
@@ -153,7 +153,7 @@ public class CategoryService implements ICategoryService {
 		refreshCategories();
 	}
 
-	@CacheEvict(cacheNames={"category, categoryDto, rootCategory"}, allEntries = true)
+	@CacheEvict(cacheNames={"category", "categoryDto", "rootCategory"}, allEntries = true)
 	public void refreshCategories() {
 		LOG.info("Evicting category cache.");
 //		LOG.info("Loading Categories from database.");

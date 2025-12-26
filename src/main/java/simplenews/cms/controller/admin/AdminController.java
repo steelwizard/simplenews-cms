@@ -85,6 +85,7 @@ public class AdminController {
 	public String getArticleCreate(Model model, HttpServletRequest httpServletRequest) {
 		String user = httpServletRequest.getUserPrincipal().getName();
 		NewsDto post = new NewsDto();
+		post.setVisible(true);
 
 		UserDto userDto = userService.getByUsername(user);
 		List<Long> categoryIds = userCategoryService.getCategoryIdsByUser(userDto.getUsername());
