@@ -106,6 +106,22 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.upload_file
     OWNER to postgres;
 
+-- Table: public.user_category
+
+-- DROP TABLE IF EXISTS public.user_category;
+
+CREATE TABLE IF NOT EXISTS public.user_category
+(
+    user_id bigint NOT NULL,
+    category_id bigint NOT NULL,
+    CONSTRAINT user_category_pkey PRIMARY KEY (user_id, category_id)
+    )
+
+    TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.user_category
+    OWNER to postgres;
+
 -- Table: public.site_setting
 
 -- DROP TABLE IF EXISTS public.site_setting;
