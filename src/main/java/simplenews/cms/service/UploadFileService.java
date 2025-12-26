@@ -125,7 +125,7 @@ public class UploadFileService implements IUploadFileService {
 
 	private String getBasePath() {
 		if (uploadPath == null) {
-			String envProp = env.getProperty("upload.file.basePath");
+			String envProp = env.getProperty("cms.data.path");
 			if (envProp == null || envProp.isEmpty()) uploadPath = DEFAULT_UPLOAD_PATH;
 			uploadPath = envProp;
 		}
