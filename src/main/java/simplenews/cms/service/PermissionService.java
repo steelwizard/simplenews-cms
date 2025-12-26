@@ -39,7 +39,6 @@ public class PermissionService implements IPermissionService {
 		Set<String> roles = authentication.getAuthorities().stream()
 				.map(r -> r.getAuthority()).collect(Collectors.toSet());
 		for (String role : roles) {
-//			LOG.info(authentication.getName() + "Role: "+role);
 			switch(role) {
 				case "ROLE_"+ RoleEnum.Names.ADMIN:
 					permissions.add(PermissionEnum.CREATE_ALL);

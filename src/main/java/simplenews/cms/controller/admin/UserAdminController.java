@@ -66,10 +66,10 @@ public class UserAdminController {
 		} catch (PasswordConfirmNotEqualException e) {
 			userEditDto.setPassword("");
 			userEditDto.setPasswordConfirm("");
-			LOG.info(e.toString());
+			LOG.warning(e.toString());
 			errorStrb.append("Error: Passwords didn't match.\n");
 		} catch (UserNotFoundException e) {
-			LOG.info(e.toString());
+			LOG.warning(e.toString());
 			errorStrb.append("Error: User not found");
 		}
 
@@ -109,12 +109,12 @@ public class UserAdminController {
 			createdUserDto = userService.registerNewUserAccount(userEditDto);
 		} catch (UserAlreadyExistsException e) {
 			userEditDto.setUsername("");
-			LOG.info(e.toString());
+			LOG.warning(e.toString());
 			errorStrb.append("Error: Username already exists.\n");
 		} catch (PasswordConfirmNotEqualException e) {
 			userEditDto.setPassword("");
 			userEditDto.setPasswordConfirm("");
-			LOG.info(e.toString());
+			LOG.warning(e.toString());
 			errorStrb.append("Error: Passwords didn't match.\n");
 		}
 

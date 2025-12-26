@@ -1,5 +1,6 @@
 package simplenews.cms.service;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -45,6 +46,7 @@ public class UploadFileService implements IUploadFileService {
 	@Autowired
 	private UploadFileRepository uploadFileRepository;
 
+
 	public List<UploadFileDto> getUploadFiles(int limit, int offset) {
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 		UserDto user = userService.getByUsername(username);
@@ -61,6 +63,11 @@ public class UploadFileService implements IUploadFileService {
 		}
 
 	}
+	@Override
+	public UploadFileDto getById(Long id) {
+		return new UploadFileDto(uploadFileRepository.findById(id).get());
+	}
+
 	public UploadFileDto getUploadFile(Long id) {
 		Optional<UploadFile> uploadFileOptional = uploadFileRepository.findById(id);
 		UploadFileDto uploadFile = null;
@@ -129,7 +136,7 @@ public class UploadFileService implements IUploadFileService {
 	private String getCurrentUploadFilePath(String hash) {
 		Calendar cal = Calendar.getInstance();
 		Integer year = cal.get(Calendar.YEAR);
-		Integer month = cal.get(Calendar.MONTH);
+		Integer month = cal.get(Calendar.MONTH)+1;
 		Path path;
 		String shortHash;
 		if (hash != null) {
@@ -150,5 +157,30 @@ public class UploadFileService implements IUploadFileService {
 		return path.toString();
 	}
 
+	@Override
+	@Transactional
+	public boolean deleteById(Long id) {
+		UploadFile file = uploadFileRepository.findById(id).orElseThrow();
+		//Check permission
+
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(file.getCreated());
+		Integer year = cal.get(Calendar.YEAR);
+		Integer month = cal.get(Calendar.MONTH)+1;
+
+		Path path = Paths.get(getBasePath(), year.toString(), month.toString(),
+				FileUtil.shorthash(file.getHash()),file.getFilename());
+
+		if (Files.exists(path) && !Files.isDirectory(path)) {
+			try {
+				Files.delete(path);
+				uploadFileRepository.deleteById(id);
+				return true;
+			} catch (IOException e) {
+				LOG.severe(e.toString());
+			}
+		}
+		return false;
+	}
 
 }

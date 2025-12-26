@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
@@ -136,7 +137,7 @@ public class NewsService implements INewsService {
 	}
 	@Override
 	public List<INewsDto> getNewsByCreatorAndCategories(String creator, List<Long> categoryIds, int limit, int offset) {
-		LOG.info("getNewsByCreatorAndCategories");
+		LOG.log(Level.FINE, "getNewsByCreatorAndCategories");
 		Set<Long> categorySet = new HashSet(categoryIds);
 		List<News> news = new ArrayList<>();
 		if (!categorySet.isEmpty()) {
@@ -288,14 +289,13 @@ public class NewsService implements INewsService {
 		}
 		if (newsRepository.existsByKey(newsDto.getKey())) {
 //			throw new DuplicateKeyException("key already exists");
-			LOG.info("key "+newsDto.getKey()+"already exists");
+			LOG.log(Level.FINE, "key "+newsDto.getKey()+"already exists");
 			newsDto.setKey(newsDto.getKey()+"-"+System.currentTimeMillis());
 		}
 	}
 
 	private Cache getCache() {
 		Cache cache = caffeineCacheManager.getCache(NEWS_CACHE);
-		LOG.info("GET CACHE: "+cache.toString());
 		return (cache);
 	}
 

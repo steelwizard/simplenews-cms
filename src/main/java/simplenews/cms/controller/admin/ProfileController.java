@@ -59,10 +59,10 @@ public class ProfileController {
 		} catch (PasswordConfirmNotEqualException e) {
 			userEditDto.setPassword("");
 			userEditDto.setPasswordConfirm("");
-			LOG.info(e.toString());
+			LOG.warning(e.toString());
 			errorStrb.append("Error: Passwords didn't match.\n");
 		} catch (UserNotFoundException e) {
-			LOG.info(e.toString());
+			LOG.warning(e.toString());
 			errorStrb.append("Error: User not found");
 		}
 

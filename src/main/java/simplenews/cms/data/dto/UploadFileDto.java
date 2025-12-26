@@ -4,6 +4,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriBuilderFactory;
 import simplenews.cms.data.entity.UploadFile;
+import simplenews.cms.service.util.FileUtil;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -97,12 +98,12 @@ public class UploadFileDto {
 				.toString();
 	}
 	public String getLink() {
-		String shortHash = hash.substring(0, Math.min(hash.length(), 8));
+		String shortHash = FileUtil.shorthash(hash);
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(created);
 
 		Integer year = cal.get(Calendar.YEAR);
-		Integer month = cal.get(Calendar.MONTH);
+		Integer month = cal.get(Calendar.MONTH)+1;
 
 		StringBuilder path = new StringBuilder(year.toString());
 		path.append("/").append(month.toString())

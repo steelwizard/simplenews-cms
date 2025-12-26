@@ -112,7 +112,7 @@ public class AdminController {
 		} catch (DuplicateKeyException e) {
 			e.printStackTrace();
 		} catch (IllegalArgumentException e) {
-			LOG.info(e.toString());
+			LOG.severe(e.toString());
 		}
 
 		UserDto userDto = userService.getByUsername(user);
@@ -167,7 +167,7 @@ public class AdminController {
 				} catch (DuplicateKeyException e) {
 					e.printStackTrace();
 				} catch (IllegalArgumentException e) {
-					LOG.info(e.toString());
+					LOG.severe(e.toString());
 				}
 
 				categories = categoryService.getAllCategoryDtos(false);

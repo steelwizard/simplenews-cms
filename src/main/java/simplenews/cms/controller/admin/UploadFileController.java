@@ -2,6 +2,7 @@ package simplenews.cms.controller.admin;
 
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,10 +12,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.view.RedirectView;
 import simplenews.cms.controller.NewsController;
 import simplenews.cms.data.dto.UploadFileDto;
+import simplenews.cms.data.entity.UploadFile;
+import simplenews.cms.service.IUploadFileService;
 import simplenews.cms.service.UploadFileService;
 
+import java.io.IOException;
 import java.util.List;
 
 @Controller
@@ -24,7 +29,7 @@ public class UploadFileController {
 	private static final int RESULT_LIMIT = 10;
 
 	@Autowired
-	UploadFileService uploadFileService;
+	IUploadFileService uploadFileService;
 
 	@GetMapping("/upload-files.html")
 	public String getUploadFiles(Model model,  @RequestParam(name = "p", required = false) Integer p) {
@@ -59,10 +64,23 @@ public class UploadFileController {
 		model.addAttribute("page", page);
 		return "admin/upload-files.html";
 	}
-	@GetMapping("edit-upload.html")
-	public String getEditUpload(Model model, @PathParam("id") Long id) {
-		return "admin/edit-upload.html";
+
+	@GetMapping("upload-delete.html")
+	public String getDeleteUploadFile(Model model, HttpServletRequest req, HttpServletResponse res,
+											 @RequestParam(value="id", required = true) Long id) throws IOException {
+		UploadFileDto file = uploadFileService.getById(id);
+		model.addAttribute("file", file);
+		return "admin/upload-delete.html";
 	}
 
-
+	@PostMapping("upload-delete.html")
+	public RedirectView postDeleteUploadFile(Model model, HttpServletRequest req, HttpServletResponse res,
+								   @RequestParam("id") Long id) throws IOException {
+		boolean success = uploadFileService.deleteById(id);
+		if (success) return new RedirectView("/_private/admin/upload-files.html");
+		else {
+			res.sendError(400);
+			return null;
+		}
+	}
 }

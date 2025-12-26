@@ -17,6 +17,7 @@ import simplenews.cms.service.IUserService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
@@ -49,12 +50,12 @@ public class UserCategoryAdminController {
 								@RequestParam MultiValueMap<String, String> userCategories) {
 		UserDto user = userService.getByUsername(username);
 		List<ICategoryDto> allCategories = categoryService.getAllCategoryDtos(false);
-		if(userCategories==null) LOG.info("No data!!");
-		else userCategories.entrySet().forEach(e -> LOG.info("Key: "+e.getKey().toString()+" Value: "+e.getValue().toString()+"\n"));
+		if(userCategories==null) LOG.severe("No data!");
+//		else userCategories.entrySet().forEach(e -> LOG.info("Key: "+e.getKey().toString()+" Value: "+e.getValue().toString()+"\n"));
 		List<String> enabledIds = userCategories.get("enabled");
 		List<Long> enabledIdsParsed = new ArrayList<>();
 		enabledIds.forEach(id -> enabledIdsParsed.add(Long.parseLong(id)));
-		LOG.info("enabled IDs :"+enabledIdsParsed.toString()+" for user "+username);
+		LOG.log(Level.FINE, "enabled IDs :"+enabledIdsParsed.toString()+" for user "+username);
 
 		userCategoryService.saveUserCategoryMap(username, enabledIdsParsed);
 

@@ -33,6 +33,8 @@
                 created: [[${file.created}]]
                 <br>
                 created: [[${file.creator}]]
+                <br>
+                <a style="color:red" th:href="@{upload-delete.html?id={id}(id=${file.id})}">Delete</a>
             </td>
         </tr>
     </table>

@@ -42,4 +42,8 @@ public class FileUtil {
 				return MediaType.APPLICATION_OCTET_STREAM;
 		}
 	}
+
+	public static String shorthash(String hash) {
+		return hash.substring(0, Math.min(hash.length(), 8));
+	}
 }
