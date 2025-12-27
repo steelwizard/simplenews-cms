@@ -17,6 +17,7 @@ import simplenews.cms.data.repository.NewsRepository;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -79,19 +80,6 @@ public class CategoryService implements ICategoryService {
 		List<ICategoryDto> categoryDtos =
 				categoryDtos = getAllCategoryDtos(visibleOnly).stream().filter(c -> c.getParent()==null).collect(Collectors.toList());
 
-		return categoryDtos;
-	}
-
-	@Override
-	public List<ICategoryDto> getChildCategories(ICategoryDto parent, boolean visibleOnly) {
-		List<Category> categories = categoryRepository.findByParent(parent.getId());
-		if (visibleOnly) categories = categories.stream().filter(c -> c.getVisible()).collect(Collectors.toList());
-		List<ICategoryDto> categoryDtos = new ArrayList<>();
-		categories.forEach(c -> {
-			CategoryDto dto = new CategoryDto(c);
-			mapDtoChildren(dto);
-			categoryDtos.add(dto);
-		});
 		return categoryDtos;
 	}
 
@@ -166,28 +154,75 @@ public class CategoryService implements ICategoryService {
 //		});
 //		categories = categoryDtos;
 	}
+//	private List<ICategoryDto> loadCategories() {
+//		LOG.info("Loading Categories from database.");
+//		List<Category> categoriesFromDb = categoryRepository.findAll();
+//		List<ICategoryDto> categoryDtos = new ArrayList<>();
+//		categoriesFromDb.forEach(category -> {
+//			CategoryDto dto = new CategoryDto(category);
+//			mapDtoChildren(dto);
+//			categoryDtos.add(dto);
+//		});
+//		return categoryDtos;
+//	}
 	private List<ICategoryDto> loadCategories() {
 		LOG.info("Loading Categories from database.");
-		List<Category> categoriesFromDb = categoryRepository.findAll();
-		List<ICategoryDto> categoryDtos = new ArrayList<>();
-		categoriesFromDb.forEach(category -> {
-			CategoryDto dto = new CategoryDto(category);
-			mapDtoChildren(dto);
-			categoryDtos.add(dto);
+
+		List<Category> allCategories = categoryRepository.findAll();
+
+		// Map all entities to DTOs and store in a lookup map by ID
+		Map<Long, CategoryDto> dtoMap = allCategories.stream()
+				.map(CategoryDto::new)
+				.collect(Collectors.toMap(CategoryDto::getId, dto -> dto));
+
+		// Link children to parents and identify root nodes
+		List<ICategoryDto> rootCategories = new ArrayList<>();
+
+		allCategories.forEach(category -> {
+			CategoryDto dto = dtoMap.get(category.getId());
+			if (category.getParent() == null) {
+				rootCategories.add(dto);
+			} else {
+				CategoryDto parentDto = dtoMap.get(category.getParent());
+				if (parentDto != null) {
+					parentDto.getChildren().add(dto);
+				}
+			}
 		});
-		return categoryDtos;
+
+		return rootCategories;
 	}
 
-	private void mapDtoChildren(ICategoryDto category) {
-		List<ICategoryDto> children = getChildCategories(category, false);
-		category.setChildren(children);
-		List<ICategoryDto> nextChildren = getChildCategories(category, false);
-		if(!nextChildren.isEmpty()) {
-			nextChildren.forEach(childOfChild -> {
-				mapDtoChildren(childOfChild);
-			});
-		}
+	@Override
+	public List<ICategoryDto> getChildCategories(ICategoryDto parent, boolean visibleOnly) {
+		return categoryRepository.findByParent(parent.getId()).stream()
+				.filter(c -> !visibleOnly || c.getVisible()) // Combined filter
+				.map(CategoryDto::new) // Convert to DTO
+				.peek(dto -> dto.setChildren(getChildCategories(dto, visibleOnly)))
+				.collect(Collectors.toList());
 	}
+//	@Override
+//	public List<ICategoryDto> getChildCategories(ICategoryDto parent, boolean visibleOnly) {
+//		List<Category> categories = categoryRepository.findByParent(parent.getId());
+//		if (visibleOnly) categories = categories.stream().filter(c -> c.getVisible()).collect(Collectors.toList());
+//		List<ICategoryDto> categoryDtos = new ArrayList<>();
+//		categories.forEach(c -> {
+//			CategoryDto dto = new CategoryDto(c);
+//			mapDtoChildren(dto);
+//			categoryDtos.add(dto);
+//		});
+//		return categoryDtos;
+//	}
+//
+//	private void mapDtoChildren(ICategoryDto category) {
+//		List<ICategoryDto> children = getChildCategories(category, false);
+//		category.setChildren(children);
+//		if(!category.getChildren().isEmpty()) {
+//			category.getChildren().forEach(childOfChild -> {
+//				mapDtoChildren(childOfChild);
+//			});
+//		}
+//	}
 
 	@Override
 	public List<ICategoryDto> findMany(List<Long> ids) {
