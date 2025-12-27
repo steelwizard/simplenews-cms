@@ -18,6 +18,7 @@ CREATE TABLE public.category (
 	parent bigint NULL,
     meta_keywords varchar COLLATE pg_catalog."default",
     meta_description varchar COLLATE pg_catalog."default",
+    "order" bigint,
 	CONSTRAINT category_pk PRIMARY KEY (id)
 );
 
