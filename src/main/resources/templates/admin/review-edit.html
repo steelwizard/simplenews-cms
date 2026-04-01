@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.title ?: 'New Review'}"></title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    [ <a th:href="@{/_private/admin/review-overview.html}">Back</a> ]
+    <hr>
+    <form th:action="@{${action}}" th:object="${post}" method="POST">
+        Title: <input type="text" name="title" th:value="${post.title}"><br>
+        Key: <input type="text" name="key" th:value="${post.key}"><br>
+        Visible: <input type="checkbox" name="visible" th:checked="${post.visible}"><br>
+        Score: <input type="number" name="score" step="0.01" min="0" max="10" th:value="${post.score}"><br>
+        <textarea cols="80" rows="30" name="content">[[${post.content}]]</textarea>
+        <br>
+        Category:
+        <select th:field="*{category}">
+            <option th:each="current : ${categories}"
+                    th:value="${current.name}"
+                    th:text="${current.name}">
+            </option>
+        </select>
+        <br>
+        <th:block th:if="${!fieldDefinitions.isEmpty()}">
+            <th:block th:each="field : ${fieldDefinitions}">
+                <label th:text="${field.fieldLabel}"></label>:
+                <input th:if="${field.fieldType.name() == 'TEXT'}"
+                       type="text"
+                       th:name="|customFields[${field.fieldKey}]|"
+                       th:value="${post.customFields != null ? post.customFields[field.fieldKey] : ''}">
+                <input th:if="${field.fieldType.name() == 'NUMBER'}"
+                       type="number"
+                       th:name="|customFields[${field.fieldKey}]|"
+                       th:value="${post.customFields != null ? post.customFields[field.fieldKey] : ''}">
+                <input th:if="${field.fieldType.name() == 'DATE'}"
+                       type="date"
+                       th:name="|customFields[${field.fieldKey}]|"
+                       th:value="${post.customFields != null ? post.customFields[field.fieldKey] : ''}">
+                <select th:if="${field.fieldType.name() == 'SELECT'}"
+                        th:name="|customFields[${field.fieldKey}]|">
+                    <option value=""></option>
+                    <option th:each="opt : ${field.optionsArray}"
+                            th:value="${opt}"
+                            th:text="${opt}"
+                            th:selected="${post.customFields != null and post.customFields[field.fieldKey] == opt}">
+                    </option>
+                </select>
+                <br>
+            </th:block>
+        </th:block>
+        Meta-Keywords: <input type="text" name="metaKeywords" th:value="${post.metaKeywords}"><br>
+        Meta-Description: <input type="text" name="metaDescription" th:value="${post.metaDescription}"><br>
+        <br>
+        <button th:formaction="@{${action}+'?action=0'}">Save</button>
+        &nbsp;|
+        &nbsp;<button th:formaction="@{${action}+'?action=1'}">Preview</button>
+        &nbsp;|
+        &nbsp;<button th:formaction="@{${action}+'?action=2'}">Delete</button>
+
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="id" th:value="${post.id}"/>
+    </form>
+
+    <hr>
+
+    <div class="news-article">
+        <h3>[[${post.title}]]</h3>
+        <div class="article-info">
+            [[${post.created}]] &nbsp; Author: [[${post.creator}]]
+            <span th:if="${post.score != null}">&nbsp;&mdash; Score: <strong>[[${post.score}]]</strong></span>
+        </div>
+        <div class="article-content" th:utext="${post.content}"></div>
+    </div>
+</body>
+</html>

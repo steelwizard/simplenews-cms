@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="keywords" th:content="${metaKeywords}">
+        <meta name="description" th:content="${metaDescription}">
+        <title th:text="${title}"></title>
+        <link th:href="@{/css/style.css}" rel="stylesheet" />
+        <link rel="canonical" th:href="@{${canonicalLink}}"/>
+    </head>
+    <body class="flex">
+        <div class="header">
+            <div th:insert="~{@{fragment/header-navigation}::header-navigation}" class="header-navigation"></div>
+            <a th:href="@{/review/index.html}">
+                <h1>Reviews</h1>
+            </a>
+        </div>
+        <div class="main-container">
+            <div th:insert="~{@{fragment/category-fragment.html} :: category}" th:with="maincategories=${categories}" class="navigation"></div>
+            <div class="news-container">
+                <div class="news-article">
+                    <h2 th:text="${post.title}"></h2>
+                    <div class="article-info">
+                        <span class="article-info-meta">[[${post.creator}]]</span>&nbsp;
+                        <span class="article-info-meta">([[${post.created}]])</span>
+                        <span class="article-info-meta">&nbsp;&mdash; Category: [[${post.category}]]</span>
+                    </div>
+
+                    <div th:if="${post.score != null}" class="review-score">
+                        Score: <strong th:text="${post.score}"></strong>
+                    </div>
+
+                    <dl th:if="${!fieldDefinitions.isEmpty()}" class="review-fields">
+                        <th:block th:each="field : ${fieldDefinitions}">
+                            <dt th:text="${field.fieldLabel}"></dt>
+                            <dd th:text="${customFieldValues[field.fieldKey] ?: '—'}"></dd>
+                        </th:block>
+                    </dl>
+
+                    <div class="article-content" th:utext="${post.content}"></div>
+
+                    <hr>
+                    Permalink: <a th:href="@{${permaLink}}">[[${permaLink}]]</a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

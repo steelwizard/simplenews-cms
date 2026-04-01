@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Review Field</title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    <section th:insert="~{@{admin/admin-navigation} :: admin-navigation}"></section>
+
+    <p>Delete field <strong th:text="${field.fieldLabel}"></strong> (<code th:text="${field.fieldKey}"></code>)?</p>
+
+    <form method="post" th:action="@{/_private/admin/review-field-delete.html}">
+        <input type="hidden" name="id" th:value="${field.id}">
+        <input type="hidden" name="categoryId" th:value="${field.categoryId}">
+        <input type="hidden" name="del" value="true">
+        <button type="submit">Yes, Delete</button>
+    </form>
+    <a th:href="@{/_private/admin/review-field-overview.html?categoryId={id}(id=${field.categoryId})}">Cancel</a>
+</body>
+</html>

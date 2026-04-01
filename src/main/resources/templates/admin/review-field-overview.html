@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Review Fields</title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    <section th:insert="~{@{admin/admin-navigation} :: admin-navigation}"></section>
+
+    <h3>Review Fields for category: <em th:text="${category.name}"></em></h3>
+
+    [ <a th:href="@{/_private/admin/review-field-create.html?categoryId={id}(id=${category.id})}">Add Field</a> |
+    <a th:href="@{/_private/admin/category-edit.html?id={id}(id=${category.id})}">Back to Category</a> ]
+    <br><br>
+    <table border="1">
+        <tr>
+            <th>Order</th>
+            <th>Key</th>
+            <th>Label</th>
+            <th>Type</th>
+            <th>Options</th>
+            <th>Required</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        <tr th:each="field : ${fields}">
+            <td>[[${field.orderIndex}]]</td>
+            <td>[[${field.fieldKey}]]</td>
+            <td>[[${field.fieldLabel}]]</td>
+            <td>[[${field.fieldType}]]</td>
+            <td>[[${field.options}]]</td>
+            <td><input type="checkbox" th:checked="${field.required}" disabled></td>
+            <td><a th:href="@{/_private/admin/review-field-edit.html?id={id}(id=${field.id})}">Edit</a></td>
+            <td><a th:href="@{/_private/admin/review-field-delete.html?id={id}(id=${field.id})}">Delete</a></td>
+        </tr>
+    </table>
+</body>
+</html>

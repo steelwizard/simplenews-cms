@@ -1,6 +1,7 @@
 package simplenews.cms.data.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,12 +22,15 @@ public class Page {
 	@Column(name = "key")
 	private String key;
 
+	@Column(name = "preview")
+	private String preview;
+
 	@Column(name = "content")
 	private String content;
 
-	@ManyToOne
-	@JoinColumn(name = "category")
-	private Category category;
+//	@ManyToOne
+//	@JoinColumn(name = "category")
+//	private Category category;
 
 	@Column(name = "creator")
 	private String creator;
@@ -40,75 +44,9 @@ public class Page {
 	@Column(name = "visible")
 	private Boolean visible;
 
-	public Long getId() {
-		return id;
-	}
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="parent",referencedColumnName = "id")
+	private Page parent;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
 
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	public String getContent() {
-		return content;
-	}
-
-	public void setContent(String content) {
-		this.content = content;
-	}
-
-	public Category getCategory() {
-		return category;
-	}
-
-	public void setCategory(Category category) {
-		this.category = category;
-	}
-
-	public String getCreator() {
-		return creator;
-	}
-
-	public void setCreator(String creator) {
-		this.creator = creator;
-	}
-
-	public Timestamp getLastModified() {
-		return lastModified;
-	}
-
-	public void setLastModified(Timestamp lastModified) {
-		this.lastModified = lastModified;
-	}
-
-	public Timestamp getCreated() {
-		return created;
-	}
-
-	public void setCreated(Timestamp created) {
-		this.created = created;
-	}
-
-	public Boolean getVisible() {
-		return visible;
-	}
-
-	public void setVisible(Boolean visible) {
-		this.visible = visible;
-	}
 }

@@ -52,6 +52,10 @@ public interface INewsDto {
 	String getMetaDescription();
 	void setMetaDescription(String metaDescription);
 
+	String getPreview();
+
+	void setPreview(String preview);
+
 	@Override
 	String toString();
 }

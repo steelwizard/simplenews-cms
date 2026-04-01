@@ -30,6 +30,7 @@
         <label for="type-select">Type: </label>
         <select id="type-select" th:field="*{type}">
             <option value="NEWS">NEWS</option>
+            <option value="REVIEW">REVIEW</option>
         </select>
         <br>
         [&nbsp;
@@ -44,5 +45,9 @@
         <br><br>
         <a style="color:red" th:href="@{category-delete.html?id={id}(id=${category.id})}">Delete</a>
     </form>
+    <div th:if="${category.id != null and category.type != null and category.type.name() == 'REVIEW'}">
+        <hr>
+        <a th:href="@{/_private/admin/review-field-overview.html?categoryId={id}(id=${category.id})}">Manage Review Fields</a>
+    </div>
 </body>
 </html>

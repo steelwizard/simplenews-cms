@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Review Field</title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    <section th:insert="~{@{admin/admin-navigation} :: admin-navigation}"></section>
+
+    <h3 th:text="${field.id == null ? 'Add Field' : 'Edit Field'}"></h3>
+    <form method="post" th:action="${action}" th:object="${field}">
+        <input type="hidden" th:field="*{id}">
+        <input type="hidden" th:field="*{categoryId}">
+
+        <label for="order-input">Order:</label>
+        <input id="order-input" type="number" th:field="*{orderIndex}" required>
+        <br>
+
+        <label for="key-input">Field Key:</label>
+        <input id="key-input" type="text" th:field="*{fieldKey}" required>
+        <br>
+
+        <label for="label-input">Label:</label>
+        <input id="label-input" type="text" th:field="*{fieldLabel}" required>
+        <br>
+
+        <label for="type-select">Type:</label>
+        <select id="type-select" th:field="*{fieldType}">
+            <option th:each="t : ${fieldTypes}" th:value="${t}" th:text="${t}"></option>
+        </select>
+        <br>
+
+        <label for="options-input">Options (one per line, for SELECT type):</label>
+        <br>
+        <textarea id="options-input" th:field="*{options}" rows="5" cols="40" placeholder="Option A&#10;Option B"></textarea>
+        <br>
+
+        <label for="required-input">Required:</label>
+        <input id="required-input" type="checkbox" th:field="*{required}">
+        <br><br>
+
+        [&nbsp;<button type="submit">Save</button>&nbsp;|&nbsp;
+        <a th:href="@{/_private/admin/review-field-overview.html?categoryId={id}(id=${field.categoryId})}">
+            <button type="button">Cancel</button>
+        </a>&nbsp;]
+    </form>
+</body>
+</html>

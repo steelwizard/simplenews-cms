@@ -23,6 +23,7 @@ public class NewsDto implements INewsDto {
 	private Boolean visible;
 	private String metaKeywords;
 	private String metaDescription;
+	private String preview;
 
 	public NewsDto() {}
 	public NewsDto(INews news) {
@@ -36,8 +37,9 @@ public class NewsDto implements INewsDto {
 		this.created = news.getCreated().toLocalDateTime();
 		this.visible = news.getVisible();
 		this.metaKeywords = news.getMetaKeywords();
-		this.metaKeywords = news.getMetaDescription();
+		this.metaDescription = news.getMetaDescription();
 		this.lastModifiedBy = news.getLastModifiedBy();
+		this.preview = news.getPreview();
 	}
 
 	@Override
@@ -149,21 +151,29 @@ public class NewsDto implements INewsDto {
 	public void setVisible(Boolean visible) {
 		this.visible = visible;
 	}
-
+	@Override
 	public String getMetaKeywords() {
 		return metaKeywords;
 	}
-
+	@Override
 	public void setMetaKeywords(String metaKeywords) {
 		this.metaKeywords = metaKeywords;
 	}
-
+	@Override
 	public String getMetaDescription() {
 		return metaDescription;
 	}
-
+	@Override
 	public void setMetaDescription(String metaDescription) {
 		this.metaDescription = metaDescription;
+	}
+	@Override
+	public String getPreview() {
+		return preview;
+	}
+	@Override
+	public void setPreview(String preview) {
+		this.preview = preview;
 	}
 
 	@Override
@@ -182,6 +192,7 @@ public class NewsDto implements INewsDto {
 				.add("visible=" + visible)
 				.add("metaKeywords='" + metaKeywords + "'")
 				.add("metaDescription='" + metaDescription + "'")
+				.add("preview='" + preview + "'")
 				.toString();
 	}
 }

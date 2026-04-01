@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="keywords" th:content="${metaKeywords}">
+        <meta name="description" th:content="${metaDescription}">
+        <title th:text="${title}"></title>
+        <link th:href="@{/css/style.css}" rel="stylesheet" />
+        <link rel="canonical" th:href="@{${canonicalLink}}"/>
+    </head>
+    <body class="flex">
+        <div class="header">
+            <div th:insert="~{@{fragment/header-navigation}::header-navigation}" class="header-navigation"></div>
+            <a th:href="@{/review/index.html}">
+                <h1>Reviews</h1>
+            </a>
+            <h2 th:text="${title}"></h2>
+        </div>
+        <div class="main-container">
+            <div th:insert="~{@{fragment/category-fragment.html} :: category}" th:with="maincategories=${categories}" class="navigation"></div>
+            <div class="news-container">
+                <div th:each="post : ${reviewlist}" class="news-article">
+                    <div class="article-info">
+                        <span>
+                            <a class="headline" th:href="@{/review/{id}-{key}.html(id=${post.id}, key=${post.key})}">
+                                [[${post.title}]]
+                            </a>
+                        </span>&nbsp;
+                        <span class="article-info-meta">[[${post.creator}]]</span>&nbsp;
+                        <span class="article-info-meta">([[${post.created}]])</span>
+                        <span th:if="${post.score != null}" class="article-info-meta">
+                            &nbsp;&mdash; Score: <strong>[[${post.score}]]</strong>
+                        </span>
+                    </div>
+                    <div class="article-content" th:utext="${post.preview ?: post.content}"></div>
+                </div>
+                <div th:if="${reviewlist.isEmpty()}">No results found.</div>
+                <hr>
+                <div class="clearfix">
+                    <span th:if="${page > -1 && !reviewlist.isEmpty()}">
+                        <a th:href="${'?p='}+${page-1}" th:if="${page > 0}">Back</a>&nbsp;|&nbsp;
+                        Page [[${page}]]
+                        &nbsp;|&nbsp;<a th:href="${'?p='}+${page+1}" th:if="${hasNextPage}">Next</a>
+                    </span>
+                    <span class="align-right">
+                        Permalink: <a th:href="@{${permaLink}}">[[${permaLink}]]</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

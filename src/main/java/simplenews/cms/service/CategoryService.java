@@ -64,21 +64,30 @@ public class CategoryService implements ICategoryService {
 	@Override
 	@Cacheable("categoryDto")
 	public List<ICategoryDto> getAllCategoryDtos(boolean visibleOnly) {
-		if (visibleOnly) return loadCategories();
-		else return loadCategories().stream().filter(c -> c.isVisible()).collect(Collectors.toList());
+		//if (visibleOnly) return loadCategories();
+		//else
+		return loadCategories().stream()
+				.filter(c -> !visibleOnly || c.isVisible())
+				.collect(Collectors.toList());
 	}
 	@Cacheable("category")
 	@Override
 	public List<Category> getAllCategories(boolean visibleOnly) {
 		List<Category> categories = categoryRepository.findAll();
-		if (visibleOnly) return categories;
-		else return categories.stream().filter(c -> c.getVisible()).collect(Collectors.toList());
+//		if (visibleOnly) return categories;
+//		else return categories.stream().filter(c -> c.getVisible()).collect(Collectors.toList());
+		return categories.stream()
+				.filter(c -> !visibleOnly || c.getVisible())
+				.collect(Collectors.toList());
 	}
 	@Override
 	@Cacheable("rootCategory")
 	public List<ICategoryDto> getRootCategories(boolean visibleOnly) {
 		List<ICategoryDto> categoryDtos =
-				categoryDtos = getAllCategoryDtos(visibleOnly).stream().filter(c -> c.getParent()==null).collect(Collectors.toList());
+				categoryDtos = getAllCategoryDtos(visibleOnly)
+						.stream()
+						.filter(c -> c.getParent()==null)
+						.collect(Collectors.toList());
 
 		return categoryDtos;
 	}

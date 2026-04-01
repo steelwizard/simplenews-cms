@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Review</title>
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+    <form method="post" th:action="@{${action}+'?id='+${post.id}+'&del=true'}" th:object="${post}">
+        <h2>Delete Review</h2>
+        <br>
+        Do you really want to delete the review <b>[[${post.title}]]</b>?<br>
+        [ <button type="submit">Yes</button>&nbsp;|&nbsp;<a th:href="@{/_private/admin/review-overview.html}"><button type="button">No</button></a> ]
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    </form>
+    <hr>
+    <div class="news-article">
+        <h3>[[${post.title}]]</h3>
+        <div class="article-info">
+            [[${post.created}]] &nbsp; Author: [[${post.creator}]]
+            <span th:if="${post.score != null}">&nbsp;&mdash; Score: <strong>[[${post.score}]]</strong></span>
+        </div>
+        <div class="article-content" th:utext="${post.content}"></div>
+    </div>
+</body>
+</html>
