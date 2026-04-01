@@ -8,6 +8,7 @@
         <title th:text="${title}"></title>
         <link th:href="@{/css/style.css}" rel="stylesheet" />
         <link rel="canonical" href="@{${canonicalLink}}"/>
+        <script th:src="@{/js/theme.js}"></script>
     </head>
     <body class="flex">
         <div class="header">
@@ -48,5 +49,6 @@
 
             </div>
         </div>
+        <div th:insert="~{@{fragment/footer-theme} :: footer-theme}"></div>
     </body>
 </html>

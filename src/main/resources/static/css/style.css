@@ -1,6 +1,55 @@
+/* ── CSS Custom Properties (default theme) ─────────────────────────── */
+:root {
+  --bg:          #d3d3d3;
+  --text:        black;
+  --heading:     rgb(65, 0, 0);
+  --link:        #00A7EE;
+  --article-bg:  #EEE;
+  --border:      black;
+  --nav-bg:      #DDD;
+  --table-border: gray;
+}
+
+/* ── Dark theme ─────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:          #121212;
+  --text:        #e0e0e0;
+  --heading:     #cf9fff;
+  --link:        #64d8cb;
+  --article-bg:  #1e1e1e;
+  --border:      #555;
+  --nav-bg:      #252525;
+  --table-border: #555;
+}
+
+/* ── Solarized theme ────────────────────────────────────────────────── */
+[data-theme="solarized"] {
+  --bg:          #fdf6e3;
+  --text:        #657b83;
+  --heading:     #268bd2;
+  --link:        #2aa198;
+  --article-bg:  #eee8d5;
+  --border:      #93a1a1;
+  --nav-bg:      #e5dcc8;
+  --table-border: #93a1a1;
+}
+
+/* ── Terminal theme ─────────────────────────────────────────────────── */
+[data-theme="terminal"] {
+  --bg:          #0d0d0d;
+  --text:        #00ff41;
+  --heading:     #00cc33;
+  --link:        #00ffaa;
+  --article-bg:  #111111;
+  --border:      #00ff41;
+  --nav-bg:      #0a0a0a;
+  --table-border: #00ff41;
+}
+
+/* ── Base styles ────────────────────────────────────────────────────── */
 body {
-  color: black;
-  background-color: #d3d3d3;
+  color: var(--text);
+  background-color: var(--bg);
   margin: 20px;
 }
 
@@ -10,16 +59,16 @@ body {
 }
 
 h1 {
-  color: rgb(65, 0, 0);
+  color: var(--heading);
 }
 
 a {
-  color: #00A7EE;
+  color: var(--link);
 }
 
 .news-article {
-  background-color: #EEE;
-  border: 1px solid black;
+  background-color: var(--article-bg);
+  border: 1px solid var(--border);
   margin: 10px 0;
   padding: 5px;
   word-wrap: break-word;
@@ -69,25 +118,25 @@ hr {
   flex: 0 0 100%;
 }
 table {
-    border: 1px solid black;
+    border: 1px solid var(--border);
 }
 th, td {
-    border: 1px solid gray;
+    border: 1px solid var(--table-border);
 }
 
 .navigation {
   margin: 10px;
-  border: 1px solid black;
+  border: 1px solid var(--border);
   padding: 10px;
   min-height: 100vh;
   min-width: 130px;
-  background-color: #DDD;
+  background-color: var(--nav-bg);
 }
 
 .news-container {
   margin: 10px;
   padding: 10px;
-  border: 1px solid black;
+  border: 1px solid var(--border);
   min-width: 70%;
   max-width: 80vw;
 }
@@ -102,7 +151,7 @@ th, td {
 .header {
   position: absolute;
   margin: 10px;
-  border: 1px solid black;
+  border: 1px solid var(--border);
   min-width: 81vw;
   padding: 15px;
 }
@@ -134,4 +183,43 @@ height: 1%;
 }
 .clearfix {
 display: block;
+}
+
+/* ── Theme footer ───────────────────────────────────────────────────── */
+.theme-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--nav-bg);
+  border-top: 1px solid var(--border);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8em;
+  z-index: 1000;
+}
+
+.theme-footer span {
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.theme-btn {
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background-color: var(--article-bg);
+  color: var(--text);
+  padding: 2px 10px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.theme-btn:hover {
+  opacity: 0.75;
+}
+
+.theme-btn.active {
+  outline: 2px solid var(--link);
 }
