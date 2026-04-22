@@ -10,7 +10,8 @@ services:
       - ./_data/cms/:/opt/cms/
       - ./application.properties:/opt/cms/application.properties
     environment:
-      - SPRING_CONFIG_LOCATION=file:/opt/cms/application.properties
+      # Import optional host file over classpath defaults (do not use spring.config.location — it replaces classpath config and drops packaged defaults).
+      - SPRING_CONFIG_IMPORT=optional:file:/opt/cms/application.properties
     restart: always
     networks:
       - cms
