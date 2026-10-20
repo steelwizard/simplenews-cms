@@ -177,11 +177,26 @@ public class NewsController {
 		return new ResponseEntity<>(categories, HttpStatus.OK);
 	}
 
-	@GetMapping("{id}.json")
+	@GetMapping("{id:[0-9]+}.json")
 	public ResponseEntity<INewsDto> jsonOne(@PathVariable Long id, HttpServletResponse res) throws IOException {
 		INewsDto news = newsService.getNewsById(id);
 		if (news == null) {
 			res.sendError(404);
+			return null;
+		}
+		return new ResponseEntity<>(news, HttpStatus.OK);
+	}
+
+	@GetMapping("{id:[0-9]+}-{key}.json")
+	public ResponseEntity<INewsDto> jsonOneByKey(@PathVariable Long id, @PathVariable String key,
+												 HttpServletResponse res) throws IOException {
+		INewsDto news = newsService.getNewsById(id);
+		if (news == null) {
+			res.sendError(404);
+			return null;
+		}
+		if (!news.getKey().equals(key)) {
+			res.sendRedirect("/news/"+news.getId()+"-"+news.getKey()+".json");
 			return null;
 		}
 		return new ResponseEntity<>(news, HttpStatus.OK);

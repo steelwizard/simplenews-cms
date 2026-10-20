@@ -62,7 +62,7 @@ public class UserCategoryService implements IUserCategoryService {
 		UserDto user = userService.getById(userId);
 		if(permissionService.hasPermission(PermissionEnum.CREATE)
 				&& permissionService.hasPermission(PermissionEnum.EDIT_ALL)) {
-			List<ICategoryDto> categories = categoryService.getAllCategoryDtos(true);
+			List<ICategoryDto> categories = categoryService.getAllCategoryDtos(false);
 			for (ICategoryDto c : categories) userCategoryDtos.add(new UserCategoryDto(userId, c.getId()));
 		} else if(permissionService.hasPermission(PermissionEnum.CREATE) && permissionService.hasPermission(PermissionEnum.EDIT_OWN)) {
 			userCategories = userCategoryRepository.findAllByUserId(user.getId());
@@ -137,7 +137,7 @@ public class UserCategoryService implements IUserCategoryService {
 	}
 
 	public List<UserCategory> getAdminUserCategories(UserDto user) {
-		List<Category> categories = categoryService.getAllCategories(true);
+		List<Category> categories = categoryService.getAllCategories(false);
 		List<UserCategory> userCategories = new ArrayList<>();
 		categories.forEach(c -> userCategories.add(new UserCategory(user.getId(), c.getId())));
 		return userCategories;
