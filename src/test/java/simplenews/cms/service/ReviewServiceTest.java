@@ -3,29 +3,69 @@ package simplenews.cms.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import simplenews.cms.data.dto.INewsDto;
+import simplenews.cms.data.dto.ReviewListPage;
+import simplenews.cms.data.entity.Category;
+import simplenews.cms.data.entity.News;
 import simplenews.cms.data.entity.ReviewField;
 import simplenews.cms.data.entity.ReviewFieldTypeEnum;
+import simplenews.cms.data.entity.ReviewType;
+import simplenews.cms.data.repository.NewsFieldValueRepository;
+import simplenews.cms.data.repository.NewsRepository;
 import simplenews.cms.data.repository.ReviewFieldRepository;
+import simplenews.cms.data.repository.ReviewTypeRepository;
+import simplenews.cms.service.ICategoryService;
+import simplenews.cms.service.INewsFileService;
+import simplenews.cms.service.INewsService;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.LongStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class ReviewServiceTest {
 
 	private ReviewFieldRepository fields;
+	private ReviewTypeRepository types;
+	private NewsRepository news;
+	private NewsFieldValueRepository values;
+	private INewsFileService files;
+	private ICategoryService categories;
+	private INewsService articles;
 	private ReviewService service;
 
 	@BeforeEach
 	void setUp() {
 		fields = mock(ReviewFieldRepository.class);
+		types = mock(ReviewTypeRepository.class);
+		news = mock(NewsRepository.class);
+		values = mock(NewsFieldValueRepository.class);
+		files = mock(INewsFileService.class);
+		categories = mock(ICategoryService.class);
+		articles = mock(INewsService.class);
 		service = new ReviewService();
 		ReflectionTestUtils.setField(service, "fieldRepository", fields);
+		ReflectionTestUtils.setField(service, "typeRepository", types);
+		ReflectionTestUtils.setField(service, "newsRepository", news);
+		ReflectionTestUtils.setField(service, "valueRepository", values);
+		ReflectionTestUtils.setField(service, "newsFileService", files);
+		ReflectionTestUtils.setField(service, "categoryService", categories);
+		ReflectionTestUtils.setField(service, "newsService", articles);
+		when(files.getByNewsIds(any())).thenReturn(Map.of());
+		when(values.findByNewsIdIn(any())).thenReturn(List.of());
+		when(categories.getAllCategories(false)).thenReturn(List.of());
 	}
 
 	// Form fields named field_12 are read as review answers, and other fields are ignored.
@@ -114,6 +154,101 @@ class ReviewServiceTest {
 
 		assertTrue(service.validateValues(7L, Map.of(6L, "2026-13-40")).get(0).contains("date"));
 		assertTrue(service.validateValues(7L, Map.of(6L, "2026-10-21")).isEmpty());
+	}
+
+	// An unknown review type never reaches the article table.
+	@Test
+	void unknownReviewTypeIsMissing() {
+		when(types.findByKey("missing")).thenReturn(Optional.empty());
+
+		assertNull(service.listReviews("missing", null, null, null, null, 10));
+
+		verifyNoInteractions(news);
+	}
+
+	// A field that cannot be filtered, and a rating sort with no rating field, are both ignored.
+	@Test
+	void unusedSortAndFilterAreDropped() {
+		ReviewType albums = reviewType(3L, "albums", "Albums");
+		when(types.findByKey("albums")).thenReturn(Optional.of(albums));
+		ReviewField notes = field(9L, "Notes", ReviewFieldTypeEnum.TEXT, false);
+		notes.setKey("notes");
+		when(fields.findByReviewTypeOrderByPositionAscIdAsc(3L)).thenReturn(List.of(notes));
+		when(news.findReviews(3L, -1L, -1L, "", false, 11, 0)).thenReturn(List.of());
+
+		ReviewListPage page = service.listReviews("albums", 0, "rating", "notes", "  jazz  ", 10);
+
+		assertEquals("Albums", page.title());
+		assertFalse(page.byRating());
+		assertFalse(page.filtered());
+		assertEquals("/reviews/albums.html", page.newestUrl());
+		assertNull(page.nextUrl());
+		verify(news).findReviews(3L, -1L, -1L, "", false, 11, 0);
+	}
+
+	// A filterable field narrows the query, and one extra row means there is a next page.
+	@Test
+	void filterAndExtraRowBuildThePageLinks() {
+		ReviewType albums = reviewType(3L, "albums", "Albums");
+		when(types.findByKey("albums")).thenReturn(Optional.of(albums));
+		ReviewField genre = field(5L, "Genre", ReviewFieldTypeEnum.CHOICE, false);
+		genre.setKey("genre");
+		genre.setFilterable(true);
+		when(fields.findByReviewTypeOrderByPositionAscIdAsc(3L)).thenReturn(List.of(genre));
+		when(news.findReviews(3L, -1L, 5L, "Jazz", false, 11, 10))
+				.thenReturn(LongStream.rangeClosed(1, 11).mapToObj(ReviewServiceTest::article).toList());
+
+		ReviewListPage page = service.listReviews("albums", 1, null, "genre", " Jazz ", 10);
+
+		assertEquals("Albums: Genre Jazz", page.title());
+		assertTrue(page.filtered());
+		assertEquals(10, page.reviews().size());
+		assertEquals("/reviews/albums.html?field=genre&value=Jazz", page.newestUrl());
+		assertEquals("/reviews/albums.html?field=genre&value=Jazz", page.prevUrl());
+		assertEquals("/reviews/albums.html?p=2&field=genre&value=Jazz", page.nextUrl());
+	}
+
+	// A hidden article, or one from another review type, is not published.
+	@Test
+	void hiddenOrForeignReviewIsNotPublished() {
+		when(types.findByKey("albums")).thenReturn(Optional.of(reviewType(3L, "albums", "Albums")));
+		INewsDto hidden = mock(INewsDto.class);
+		when(hidden.getVisible()).thenReturn(false);
+		when(articles.getNewsById(4L)).thenReturn(hidden);
+
+		assertNull(service.getPublishedReview("albums", 4L));
+
+		INewsDto other = mock(INewsDto.class);
+		when(other.getVisible()).thenReturn(true);
+		when(other.getCategory()).thenReturn("books");
+		when(articles.getNewsById(5L)).thenReturn(other);
+		when(categories.getCategoryByName("books")).thenReturn(null);
+
+		assertNull(service.getPublishedReview("albums", 5L));
+	}
+
+	private static ReviewType reviewType(long id, String key, String title) {
+		ReviewType type = new ReviewType();
+		type.setId(id);
+		type.setKey(key);
+		type.setTitle(title);
+		return type;
+	}
+
+	private static News article(long id) {
+		Category category = new Category();
+		category.setName("jazz");
+		News article = new News();
+		article.setId(id);
+		article.setTitle("Album " + id);
+		article.setKey("album-" + id);
+		article.setContent("notes");
+		article.setCategory(category);
+		article.setCreator("editor");
+		article.setCreated(new Timestamp(0));
+		article.setLastModified(new Timestamp(0));
+		article.setVisible(true);
+		return article;
 	}
 
 	private void stub(ReviewField field) {

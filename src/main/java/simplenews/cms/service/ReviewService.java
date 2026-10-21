@@ -4,12 +4,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 import simplenews.cms.data.dto.INewsDto;
 import simplenews.cms.data.dto.NewsDto;
 import simplenews.cms.data.dto.ReviewFieldDisplayDto;
 import simplenews.cms.data.dto.ReviewFieldDto;
 import simplenews.cms.data.dto.ReviewJsonDto;
+import simplenews.cms.data.dto.ReviewListPage;
 import simplenews.cms.data.dto.ReviewTypeDto;
+import simplenews.cms.data.dto.ReviewTypeJsonDto;
 import simplenews.cms.data.entity.Category;
 import simplenews.cms.data.entity.News;
 import simplenews.cms.data.entity.NewsFieldValue;
@@ -61,6 +64,8 @@ public class ReviewService implements IReviewService {
 	NavigationItemRepository navigationRepository;
 	@Autowired
 	ICategoryService categoryService;
+	@Autowired
+	INewsService newsService;
 	@Autowired
 	INewsFileService newsFileService;
 
@@ -413,8 +418,78 @@ public class ReviewService implements IReviewService {
 	}
 
 	@Override
-	public List<INewsDto> findReviews(ReviewType type, ReviewField filterField, String filterValue,
-									  boolean byRating, int limit, int offset) {
+	public ReviewListPage listReviews(String typeKey, Integer page, String sort, String fieldKey, String value, int limit) {
+		ListedReviews listed = list(typeKey, page, sort, fieldKey, value, limit);
+		if (listed == null) return null;
+		String sortParam = listed.byRating() ? "rating" : null;
+		String filterKey = listed.filterField() != null ? listed.filterField().getKey() : null;
+		String title = listed.type().getTitle();
+		if (listed.filterField() != null) {
+			title += ": " + listed.filterField().getLabel() + " " + listed.filterValue();
+		}
+		return new ReviewListPage(
+				listed.type(),
+				title,
+				listed.reviews(),
+				getDisplayValues(listed.reviews(), true),
+				listed.hasRating(),
+				listed.byRating(),
+				listed.filterField() != null,
+				listUrl(listed.type(), 0, null, filterKey, listed.filterValue()),
+				listUrl(listed.type(), 0, "rating", filterKey, listed.filterValue()),
+				listUrl(listed.type(), 0, sortParam, null, null),
+				listed.page() > 0 ? listUrl(listed.type(), listed.page() - 1, sortParam, filterKey, listed.filterValue()) : null,
+				listed.hasNextPage() ? listUrl(listed.type(), listed.page() + 1, sortParam, filterKey, listed.filterValue()) : null,
+				listed.page());
+	}
+
+	@Override
+	public List<ReviewJsonDto> listReviewsJson(String typeKey, Integer page, String sort, String fieldKey, String value, int limit) {
+		ListedReviews listed = list(typeKey, page, sort, fieldKey, value, limit);
+		return listed == null ? null : toJson(listed.reviews());
+	}
+
+	@Override
+	public ReviewJsonDto getPublishedReview(String typeKey, Long newsId) {
+		ReviewType type = getReviewTypeByKey(typeKey);
+		if (type == null || newsId == null) return null;
+		INewsDto news = newsService.getNewsById(newsId);
+		if (news == null || !Boolean.TRUE.equals(news.getVisible())
+				|| !Objects.equals(getReviewTypeIdForCategory(news.getCategory()), type.getId())) {
+			return null;
+		}
+		return toJson(List.of(news)).get(0);
+	}
+
+	@Override
+	public List<ReviewTypeJsonDto> listReviewTypesJson() {
+		return getReviewTypes().stream()
+				.map(type -> new ReviewTypeJsonDto(type, getFields(type.getId(), true)))
+				.toList();
+	}
+
+	private ListedReviews list(String typeKey, Integer p, String sort, String fieldKey, String value, int limit) {
+		ReviewType type = getReviewTypeByKey(typeKey);
+		if (type == null) return null;
+		int page = p != null && p > 0 ? p : 0;
+		boolean hasRating = getRatingField(type.getId()) != null;
+		boolean byRating = "rating".equals(sort) && hasRating;
+		ReviewField filterField = null;
+		String filterValue = null;
+		if (fieldKey != null && value != null && !value.isBlank()) {
+			filterField = getFields(type.getId(), true).stream()
+					.filter(f -> f.isFilterable() && f.getKey().equals(fieldKey))
+					.findFirst().orElse(null);
+			if (filterField != null) filterValue = value.strip();
+		}
+		List<INewsDto> reviews = findReviews(type, filterField, filterValue, byRating, limit + 1, limit * page);
+		boolean hasNextPage = reviews.size() > limit;
+		if (hasNextPage) reviews = reviews.subList(0, limit);
+		return new ListedReviews(type, page, byRating, hasRating, filterField, filterValue, reviews, hasNextPage);
+	}
+
+	private List<INewsDto> findReviews(ReviewType type, ReviewField filterField, String filterValue,
+									   boolean byRating, int limit, int offset) {
 		ReviewField rating = getRatingField(type.getId());
 		long ratingId = rating != null ? rating.getId() : -1L;
 		boolean useFilter = filterField != null && filterValue != null && !filterValue.isBlank();
@@ -428,6 +503,18 @@ public class ReviewService implements IReviewService {
 			return (INewsDto) dto;
 		}).toList();
 	}
+
+	private static String listUrl(ReviewType type, int page, String sort, String field, String value) {
+		UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/reviews/" + type.getKey() + ".html");
+		if (page > 0) builder.queryParam("p", page);
+		if (sort != null) builder.queryParam("sort", sort);
+		if (field != null) builder.queryParam("field", field).queryParam("value", value);
+		return builder.encode().build().toUriString();
+	}
+
+	private record ListedReviews(ReviewType type, int page, boolean byRating, boolean hasRating,
+								 ReviewField filterField, String filterValue,
+								 List<INewsDto> reviews, boolean hasNextPage) {}
 
 	@Override
 	public ReviewField getRatingField(Long reviewTypeId) {
