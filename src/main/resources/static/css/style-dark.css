@@ -36,6 +36,11 @@ a {
   margin: 0 10px;
 }
 
+.read-more {
+  display: block;
+  margin: 8px 10px 0;
+}
+
 h1,
 h2,
 h3,

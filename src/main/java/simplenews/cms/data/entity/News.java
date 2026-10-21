@@ -27,7 +27,7 @@ public class News implements INews {
 	@Column(name = "key")
 	private String key;
 
-	@Column(name = "content")
+	@Column(name = "content", columnDefinition = "text")
 	private String content;
 
 	@ManyToOne

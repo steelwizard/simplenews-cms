@@ -38,7 +38,12 @@
                     </div>
                     <dl th:replace="~{fragment/review-fields :: review-fields(${reviewValues[post.id]})}"></dl>
                     <ul th:replace="~{fragment/download-files :: files(${post.files})}"></ul>
-                    <div class="article-content" th:utext="${post.content}"></div>
+                    <th:block th:with="excerpt=${T(simplenews.cms.service.util.ExcerptUtil).categoryExcerpt(post.content)}">
+                        <div class="article-content" th:if="${excerpt != null}" th:text="${excerpt}"></div>
+                        <a th:if="${excerpt != null}" class="read-more"
+                           th:href="@{/{id}-{key}.html(id=${post.id}, key=${post.key})}">Read more</a>
+                        <div class="article-content" th:unless="${excerpt != null}" th:utext="${post.content}"></div>
+                    </th:block>
 
                 </div>
                 <div class="news-container" th:if="${newslist.isEmpty()}">

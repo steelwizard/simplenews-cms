@@ -126,23 +126,6 @@ public class NewsService implements INewsService {
 		return toDtos(news);
 	}
 
-//	@Override
-//	public List<NewsDto> getAllNewsByCategoryId(long id) {
-//
-//		Category category = categoryService.getCategoryById(id);
-//		List<News> news = new ArrayList<>();
-//		if (category != null) {
-//			news = newsRepository.findByCategoryId(category.getId());
-//		}
-//		List<NewsDto> newsDtoList = new ArrayList<>();
-//		Collections.sort(news, Comparator.comparing(News::getLastModified).reversed());
-//		news.forEach(n -> {
-//			newsDtoList.add(new NewsDto(n));
-//		});
-//
-//		return newsDtoList;
-//	}
-
 	@CacheEvict(cacheNames = {"news", "newsLatest"}, allEntries = true)
 	@Override
 	public NewsDto createNews(NewsDto newsDto, String user) throws InsufficientPermissionException,
