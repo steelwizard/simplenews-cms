@@ -188,7 +188,7 @@ CREATE TABLE public.review_field (
 	review_type bigint NOT NULL REFERENCES public.review_type(id) ON DELETE CASCADE,
 	"key" varchar(50) NOT NULL,
 	label varchar(100) NOT NULL,
-	field_type varchar(20) NOT NULL,       -- TEXT, NUMBER, RATING, DATE, URL, CHOICE
+	field_type varchar(20) NOT NULL,       -- TEXT, NUMBER, RATING, PERCENT, DATE, URL, CHOICE
 	min_value numeric NULL,
 	max_value numeric NULL,
 	choices text NULL,                     -- one choice per line

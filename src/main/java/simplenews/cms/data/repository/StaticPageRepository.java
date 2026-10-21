@@ -13,6 +13,8 @@ public interface StaticPageRepository extends JpaRepository<StaticPage, Long> {
 
 	boolean existsByKey(String key);
 
+	List<StaticPage> findByVisibleTrueOrderByTitleAscIdAsc();
+
 	@Query("FROM StaticPage p ORDER BY p.lastModified DESC LIMIT :limit OFFSET :offset")
 	List<StaticPage> findOrderByLastModifiedDesc(@Param("limit") int limit, @Param("offset") int offset);
 }

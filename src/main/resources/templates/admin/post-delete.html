@@ -6,7 +6,7 @@
     <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
 </head>
 <body>
-    <form form method="post" th:action="@{${action}+'?id='+${post.id}+'&del=true'}" th:object="${post}">
+    <form method="post" th:action="@{/_private/admin/post-delete.html(id=${post.id}, del=true)}">
         <h2>Delete Post</h2>
         <br>
         Do you really want to delete the post <b>[[${post.title}]]</b>?<br>
@@ -17,7 +17,7 @@
     <div class="news-article">
         <h3>[[${post.title}]]</h3>
         <div class="article-info">[[${post.created}]] &nbsp; Author: [[${post.creator}]]</div>
-        <div class="article-content" th:utext="${post.content}"></div>
+        <div class="article-content" th:utext="${previewContent}"></div>
     </div>
 </body>
 </html>

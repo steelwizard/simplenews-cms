@@ -27,12 +27,12 @@
         </select>
         <span th:if="${hasValues}">(reviews already use this field, so the type cannot be changed)</span>
         <br>
-        <span data-for-type="NUMBER RATING">
+        <span data-for-type="NUMBER RATING PERCENT">
             <label for="min-input">Minimum:</label>
             <input id="min-input" type="number" step="any" th:field="*{minValue}">
             <label for="max-input">Maximum:</label>
             <input id="max-input" type="number" step="any" th:field="*{maxValue}">
-            (ratings default to 0 - 10)
+            (ratings default to 0 - 10, percents to 0 - 100)
             <br>
         </span>
         <span data-for-type="CHOICE">

@@ -178,4 +178,21 @@ display: block;
 }
 .review-fields dd {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.review-percent-track {
+  display: inline-block;
+  width: 80px;
+  height: 8px;
+  background-color: #ccc;
+  border: 1px solid black;
+  overflow: hidden;
+}
+.review-percent-fill {
+  display: block;
+  height: 100%;
+  background-color: rgb(65, 0, 0);
 }

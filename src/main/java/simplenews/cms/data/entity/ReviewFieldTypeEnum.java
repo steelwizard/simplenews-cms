@@ -4,6 +4,7 @@ public enum ReviewFieldTypeEnum {
 	TEXT,
 	NUMBER,
 	RATING,
+	PERCENT,
 	DATE,
 	URL,
 	CHOICE

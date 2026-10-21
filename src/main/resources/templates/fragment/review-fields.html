@@ -5,6 +5,11 @@
             <a th:if="${f.href != null and f.external}" th:href="${f.href}" rel="nofollow noopener" target="_blank">[[${f.value}]]</a>
             <a th:if="${f.href != null and !f.external}" th:href="@{${f.href}}">[[${f.value}]]</a>
             <span th:if="${f.href == null}">[[${f.value}]]</span>
+            <span th:if="${f.barPercent != null}" class="review-percent-track"
+                  role="meter" aria-valuemin="0" aria-valuemax="100"
+                  th:attr="aria-valuenow=${f.barPercent},aria-label=${f.label}">
+                <span class="review-percent-fill" th:style="|width:${f.barPercent}%|"></span>
+            </span>
         </dd>
     </th:block>
 </dl>

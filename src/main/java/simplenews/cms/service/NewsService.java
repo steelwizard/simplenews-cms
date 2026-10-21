@@ -195,7 +195,7 @@ public class NewsService implements INewsService {
 		news.setLastModifiedBy(user);
 		news.setContent(SanitizeUtil.sanitize(newsDto.getContent()));
 		news.setKey(newsDto.getKey());
-		news.setVisible(newsDto.getVisible());
+		news.setVisible(Boolean.TRUE.equals(newsDto.getVisible()));
 		news.setCreated(new Timestamp(System.currentTimeMillis()));
 		news.setLastModified(new Timestamp(System.currentTimeMillis()));
 		news.setMetaKeywords(newsDto.getMetaKeywords());
@@ -222,12 +222,15 @@ public class NewsService implements INewsService {
 		if (userDto == null) {
 			throw new IllegalArgumentException("No user to edit article");
 		}
-		if(!permissionService.canEdit(newsDto)) throw new InsufficientPermissionException("Unauthorized article edit by user "+user+" for article "+newsDto.getId());
-
-		News news = newsRepository.getReferenceById(id);
-		if (news == null) {
-			throw new IllegalArgumentException("Article doesn't exist");
+		News news = newsRepository.findById(id)
+				.orElseThrow(() -> new IllegalArgumentException("Article doesn't exist"));
+		NewsDto stored = new NewsDto(news);
+		boolean allowed = permissionService.canEdit(stored);
+		if (allowed && newsDto.getCategory() != null && !newsDto.getCategory().equals(stored.getCategory())) {
+			stored.setCategory(newsDto.getCategory());
+			allowed = permissionService.canEdit(stored);
 		}
+		if(!allowed) throw new InsufficientPermissionException("Unauthorized article edit by user "+user+" for article "+id);
 		if (!newsDto.getKey().equals(news.getKey()) && newsRepository.existsByKey(newsDto.getKey())) {
 			processKey(newsDto);
 			throw new DuplicateKeyException("key already exists");
@@ -238,7 +241,7 @@ public class NewsService implements INewsService {
 		news.setLastModifiedBy(user);
 		news.setContent(SanitizeUtil.sanitize(newsDto.getContent()));
 		news.setKey(newsDto.getKey());
-		news.setVisible(newsDto.getVisible());
+		news.setVisible(Boolean.TRUE.equals(newsDto.getVisible()));
 		news.setLastModified(new Timestamp(System.currentTimeMillis()));
 		news.setMetaKeywords(newsDto.getMetaKeywords());
 		news.setMetaDescription(newsDto.getMetaDescription());
@@ -257,7 +260,8 @@ public class NewsService implements INewsService {
 	@Override
 	@CacheEvict(cacheNames = {"news", "newsLatest"}, allEntries = true)
 	public void deleteNews(Long id) throws InsufficientPermissionException {
-		INews newsDto = newsRepository.getReferenceById(id);
+		INews newsDto = newsRepository.findById(id)
+				.orElseThrow(() -> new IllegalArgumentException("Article doesn't exist"));
 		if(!permissionService.canDelete(new NewsDto(newsDto))) {
 			throw new InsufficientPermissionException("Unauthorized article deletion by user "+userService.getCurrentUserName()+" for article id "+id);
 		}

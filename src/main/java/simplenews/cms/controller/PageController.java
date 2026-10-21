@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +35,7 @@ public class PageController {
 	@Autowired
 	IPermissionService permissionService;
 
-	@GetMapping({"{key:[a-z0-9\\-]+}", "{key:[a-z0-9\\-]+}/"})
+	@GetMapping("{key:[a-z0-9\\-]+}.html")
 	public String render(@PathVariable String key, Model model,
 						 HttpServletRequest request, HttpServletResponse response) throws IOException {
 		PageDto page = pageService.getByKey(key);
@@ -47,7 +48,7 @@ public class PageController {
 		String keywords = blankToSite(page.getMetaKeywords(), siteSettingService.getSiteMetaKeywords());
 		String description = blankToSite(page.getMetaDescription(), siteSettingService.getSiteMetaDescription());
 		String host = request.getHeader("host");
-		String canonical = (host == null ? "" : host) + "/pages/" + page.getKey();
+		String canonical = (host == null ? "" : host) + "/pages/" + page.getKey() + ".html";
 
 		model.addAttribute("page", page);
 		model.addAttribute("categories", categories);
@@ -59,9 +60,24 @@ public class PageController {
 		return "pages/page.html";
 	}
 
-	@GetMapping("{key:[a-z0-9\\-]+}.html")
-	public RedirectView redirectHtml(@PathVariable String key) {
-		RedirectView redirect = new RedirectView("/pages/" + key);
+	@GetMapping("index.json")
+	public ResponseEntity<List<PageDto>> jsonIndex() {
+		return new ResponseEntity<>(pageService.listVisible(), HttpStatus.OK);
+	}
+
+	@GetMapping("{key:[a-z0-9\\-]+}.json")
+	public ResponseEntity<PageDto> jsonOne(@PathVariable String key, HttpServletResponse response) throws IOException {
+		PageDto page = pageService.getByKey(key);
+		if (page == null || !Boolean.TRUE.equals(page.getVisible())) {
+			response.sendError(HttpServletResponse.SC_NOT_FOUND);
+			return null;
+		}
+		return new ResponseEntity<>(page, HttpStatus.OK);
+	}
+
+	@GetMapping({"{key:[a-z0-9\\-]+}", "{key:[a-z0-9\\-]+}/"})
+	public RedirectView redirectBare(@PathVariable String key) {
+		RedirectView redirect = new RedirectView("/pages/" + key + ".html");
 		redirect.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
 		return redirect;
 	}

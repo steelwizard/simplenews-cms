@@ -15,7 +15,7 @@
         Title: <input type="text" th:field="*{title}"><br>
         Key: <input type="text" th:field="*{key}">
         <span th:if="${page.key != null and page.key.matches('[a-z0-9-]+')}">
-            <a th:href="@{/pages/{key}(key=${page.key})}">/pages/[[${page.key}]]</a>
+            <a th:href="@{/pages/{key}.html(key=${page.key})}">/pages/[[${page.key}]].html</a>
         </span>
         <br>
         Visible: <input type="checkbox" th:field="*{visible}"><br>

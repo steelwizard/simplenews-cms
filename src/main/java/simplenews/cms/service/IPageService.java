@@ -9,6 +9,8 @@ import java.util.List;
 public interface IPageService {
 	List<PageDto> list(int limit, int offset) throws InsufficientPermissionException;
 
+	List<PageDto> listVisible();
+
 	PageDto getById(Long id);
 
 	PageDto getByKey(String key);

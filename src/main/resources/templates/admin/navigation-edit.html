@@ -40,7 +40,7 @@
             <label for="page-select">Page:</label>
             <select id="page-select" th:field="*{pageId}">
                 <option th:value="${null}">---</option>
-                <option th:each="p : ${pages}" th:value="${p.id}" th:text="${p.title + ' (/pages/' + p.key + ')'}"></option>
+                <option th:each="p : ${pages}" th:value="${p.id}" th:text="${p.title + ' (/pages/' + p.key + '.html)'}"></option>
             </select>
             <br>
         </span>

@@ -71,7 +71,7 @@ It has the following sections:
 
 * **Posts:** create and edit posts
 
-* **Pages:** create static pages, published at `/pages/<key>` (editors and admins)
+* **Pages:** create static pages, published at `/pages/<key>.html` (editors and admins)
 
 * **Navigation:** arrange the header and sidebar menus with links to pages, categories,
   review lists, the category tree or any address (admins)

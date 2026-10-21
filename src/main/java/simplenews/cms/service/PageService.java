@@ -47,6 +47,14 @@ public class PageService implements IPageService {
 	}
 
 	@Override
+	@Cacheable(cacheNames = "pages", key = "'#visible'")
+	public List<PageDto> listVisible() {
+		return pageRepository.findByVisibleTrueOrderByTitleAscIdAsc().stream()
+				.map(PageDto::new)
+				.toList();
+	}
+
+	@Override
 	public PageDto getById(Long id) {
 		if (id == null) {
 			return null;
@@ -137,6 +145,9 @@ public class PageService implements IPageService {
 	@Override
 	public void prepareKey(PageDto pageDto) {
 		pageDto.setKey(normalizeKey(pageDto.getKey(), pageDto.getTitle()));
+		if (pageDto.getKey().equals("index")) {
+			throw new IllegalArgumentException("The key 'index' is reserved for /pages/index.json.");
+		}
 	}
 
 	private StaticPage saveUnique(StaticPage page) throws DuplicateKeyException {

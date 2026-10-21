@@ -68,8 +68,7 @@ public class PageAdminController {
 						 HttpServletRequest request,
 						 Model model) {
 		if (action == 1) {
-			pageService.prepareKey(page);
-			showEditor(model, page, "/_private/admin/page-create.html", null, false);
+			showEditor(model, page, "/_private/admin/page-create.html", previewKey(page), false);
 			return "admin/page-edit.html";
 		}
 		if (action != 0) {
@@ -112,8 +111,7 @@ public class PageAdminController {
 					   Model model) throws IOException {
 		String actionPath = "/_private/admin/page-edit.html";
 		if (action == 1) {
-			pageService.prepareKey(page);
-			showEditor(model, page, actionPath, null, false);
+			showEditor(model, page, actionPath, previewKey(page), false);
 			return "admin/page-edit.html";
 		}
 		if (action == 2) {
@@ -175,6 +173,15 @@ public class PageAdminController {
 			}
 		}
 		return "redirect:/_private/admin/page-overview.html";
+	}
+
+	private String previewKey(PageDto page) {
+		try {
+			pageService.prepareKey(page);
+			return null;
+		} catch (IllegalArgumentException e) {
+			return e.getMessage();
+		}
 	}
 
 	private void showEditor(Model model, PageDto page, String action, String error, boolean saved) {

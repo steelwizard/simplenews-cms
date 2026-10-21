@@ -112,7 +112,7 @@ public class NewsController {
 	@GetMapping({"{id:[0-9]+}.html","{id:[0-9]+}","{id:[0-9]+}/"})
 	public RedirectView renderOne(Model model, @PathVariable Long id, HttpServletResponse res) throws IOException {
 		List<INewsDto> newslist = new ArrayList<>();
-		INewsDto news = newsService.getNewsById(id);
+		INewsDto news = getVisibleNews(id);
 		if (news == null) {
 			res.sendError(404);
 			return null;
@@ -126,7 +126,7 @@ public class NewsController {
 								 @PathVariable String key, HttpServletRequest req,
 								 HttpServletResponse res) throws IOException {
 		List<INewsDto> newslist = new ArrayList<>();
-		INewsDto news = newsService.getNewsById(id);
+		INewsDto news = getVisibleNews(id);
 		if (news == null) {
 			res.sendError(404);
 			return null;
@@ -185,7 +185,7 @@ public class NewsController {
 
 	@GetMapping("{id:[0-9]+}.json")
 	public ResponseEntity<INewsDto> jsonOne(@PathVariable Long id, HttpServletResponse res) throws IOException {
-		INewsDto news = newsService.getNewsById(id);
+		INewsDto news = getVisibleNews(id);
 		if (news == null) {
 			res.sendError(404);
 			return null;
@@ -196,7 +196,7 @@ public class NewsController {
 	@GetMapping("{id:[0-9]+}-{key}.json")
 	public ResponseEntity<INewsDto> jsonOneByKey(@PathVariable Long id, @PathVariable String key,
 												 HttpServletResponse res) throws IOException {
-		INewsDto news = newsService.getNewsById(id);
+		INewsDto news = getVisibleNews(id);
 		if (news == null) {
 			res.sendError(404);
 			return null;
@@ -207,6 +207,11 @@ public class NewsController {
 		}
 		return new ResponseEntity<>(news, HttpStatus.OK);
 	}
+	private INewsDto getVisibleNews(Long id) {
+		INewsDto news = newsService.getNewsById(id);
+		return news != null && Boolean.TRUE.equals(news.getVisible()) ? news : null;
+	}
+
 	@GetMapping
 	public RedirectView redirectToIndex() {
 		RedirectView redirect = new RedirectView("/news/index.html");

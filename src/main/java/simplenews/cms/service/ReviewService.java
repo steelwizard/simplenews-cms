@@ -8,6 +8,7 @@ import simplenews.cms.data.dto.INewsDto;
 import simplenews.cms.data.dto.NewsDto;
 import simplenews.cms.data.dto.ReviewFieldDisplayDto;
 import simplenews.cms.data.dto.ReviewFieldDto;
+import simplenews.cms.data.dto.ReviewJsonDto;
 import simplenews.cms.data.dto.ReviewTypeDto;
 import simplenews.cms.data.entity.Category;
 import simplenews.cms.data.entity.NewsFieldValue;
@@ -23,6 +24,7 @@ import simplenews.cms.data.repository.ReviewTypeRepository;
 import simplenews.cms.service.util.SlugUtil;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -84,6 +86,7 @@ public class ReviewService implements IReviewService {
 		if (title.length() > 100) throw new IllegalArgumentException("Title is too long (max. 100 characters).");
 		String key = SlugUtil.slugify(dto.getKey() == null || dto.getKey().isBlank() ? title : dto.getKey(), 50);
 		if (key.isEmpty()) throw new IllegalArgumentException("Key must contain letters or digits.");
+		if (key.equals("index")) throw new IllegalArgumentException("The key 'index' is reserved for /reviews/index.json.");
 
 		ReviewType type;
 		if (dto.getId() != null) {
@@ -191,6 +194,11 @@ public class ReviewService implements IReviewService {
 			case RATING -> {
 				min = dto.getMinValue() != null ? dto.getMinValue() : BigDecimal.ZERO;
 				max = dto.getMaxValue() != null ? dto.getMaxValue() : BigDecimal.TEN;
+				if (min.compareTo(max) >= 0) throw new IllegalArgumentException("Minimum must be lower than maximum.");
+			}
+			case PERCENT -> {
+				min = dto.getMinValue() != null ? dto.getMinValue() : BigDecimal.ZERO;
+				max = dto.getMaxValue() != null ? dto.getMaxValue() : new BigDecimal("100");
 				if (min.compareTo(max) >= 0) throw new IllegalArgumentException("Minimum must be lower than maximum.");
 			}
 			case NUMBER -> {
@@ -365,6 +373,43 @@ public class ReviewService implements IReviewService {
 	}
 
 	@Override
+	public List<ReviewJsonDto> toJson(List<INewsDto> news) {
+		List<ReviewJsonDto> result = new ArrayList<>();
+		if (news == null || news.isEmpty()) return result;
+
+		Map<String, Long> typeByCategory = new HashMap<>();
+		categoryService.getAllCategories(false).forEach(c -> {
+			if (c.getReviewType() != null) typeByCategory.put(c.getName(), c.getReviewType());
+		});
+		Set<Long> ids = news.stream().map(INewsDto::getId).collect(Collectors.toSet());
+		Map<Long, Map<Long, NewsFieldValue>> valuesByNews = new HashMap<>();
+		valueRepository.findByNewsIdIn(ids).forEach(v ->
+				valuesByNews.computeIfAbsent(v.getNewsId(), k -> new HashMap<>()).put(v.getFieldId(), v));
+
+		Map<Long, ReviewType> types = new HashMap<>();
+		Map<Long, List<ReviewField>> fieldsByType = new HashMap<>();
+		for (INewsDto item : news) {
+			Long typeId = typeByCategory.get(item.getCategory());
+			ReviewType type = typeId == null ? null : types.computeIfAbsent(typeId, this::getReviewType);
+			Map<String, Object> fields = new LinkedHashMap<>();
+			if (type != null) {
+				Map<Long, NewsFieldValue> values = valuesByNews.getOrDefault(item.getId(), Map.of());
+				for (ReviewField field : fieldsByType.computeIfAbsent(typeId, t -> getFields(t, true))) {
+					NewsFieldValue value = values.get(field.getId());
+					if (value == null || value.getValueText() == null) continue;
+					boolean numeric = field.getFieldType() == ReviewFieldTypeEnum.NUMBER
+							|| field.getFieldType() == ReviewFieldTypeEnum.RATING
+							|| field.getFieldType() == ReviewFieldTypeEnum.PERCENT;
+					fields.put(field.getKey(), numeric && value.getValueNumber() != null
+							? value.getValueNumber() : value.getValueText());
+				}
+			}
+			result.add(new ReviewJsonDto(item, type != null ? type.getKey() : null, fields));
+		}
+		return result;
+	}
+
+	@Override
 	public List<INewsDto> findReviews(ReviewType type, ReviewField filterField, String filterValue,
 									  boolean byRating, int limit, int offset) {
 		ReviewField rating = getRatingField(type.getId());
@@ -387,24 +432,48 @@ public class ReviewService implements IReviewService {
 
 	private ReviewFieldDisplayDto toDisplay(ReviewType type, ReviewField field, String value) {
 		String shown = value;
+		Integer barPercent = null;
 		if (field.getFieldType() == ReviewFieldTypeEnum.RATING && field.getMaxValue() != null) {
 			shown = value + " / " + field.getMaxValue().stripTrailingZeros().toPlainString();
 		}
+		if (field.getFieldType() == ReviewFieldTypeEnum.PERCENT) {
+			shown = value + "%";
+			barPercent = barPercent(field, value);
+		}
 		if (field.getFieldType() == ReviewFieldTypeEnum.URL) {
-			return new ReviewFieldDisplayDto(field.getLabel(), shown, value, true);
+			return new ReviewFieldDisplayDto(field.getLabel(), shown, value, true, barPercent);
 		}
 		if (field.isFilterable()) {
 			String href = "/reviews/" + type.getKey() + ".html?field=" + field.getKey()
 					+ "&value=" + URLEncoder.encode(value, StandardCharsets.UTF_8);
-			return new ReviewFieldDisplayDto(field.getLabel(), shown, href, false);
+			return new ReviewFieldDisplayDto(field.getLabel(), shown, href, false, barPercent);
 		}
-		return new ReviewFieldDisplayDto(field.getLabel(), shown, null, false);
+		return new ReviewFieldDisplayDto(field.getLabel(), shown, null, false, barPercent);
+	}
+
+	private Integer barPercent(ReviewField field, String value) {
+		BigDecimal number;
+		try {
+			number = new BigDecimal(value.replace(',', '.'));
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+		BigDecimal min = field.getMinValue() != null ? field.getMinValue() : BigDecimal.ZERO;
+		BigDecimal max = field.getMaxValue() != null ? field.getMaxValue() : new BigDecimal("100");
+		BigDecimal range = max.subtract(min);
+		if (range.compareTo(BigDecimal.ZERO) <= 0) return 0;
+		int pct = number.subtract(min)
+				.divide(range, 4, RoundingMode.HALF_UP)
+				.multiply(new BigDecimal("100"))
+				.setScale(0, RoundingMode.HALF_UP)
+				.intValue();
+		return Math.max(0, Math.min(100, pct));
 	}
 
 	private Normalized normalize(ReviewField field, String raw) {
 		if (raw.length() > VALUE_MAX) throw new IllegalArgumentException("is too long (max. " + VALUE_MAX + " characters).");
 		switch (field.getFieldType()) {
-			case NUMBER, RATING -> {
+			case NUMBER, RATING, PERCENT -> {
 				BigDecimal number;
 				try {
 					number = new BigDecimal(raw.replace(',', '.'));

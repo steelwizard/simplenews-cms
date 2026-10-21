@@ -1,5 +1,6 @@
 package simplenews.cms.data.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import simplenews.cms.data.entity.StaticPage;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ public class PageDto {
 	private String lastModifiedBy;
 	private LocalDateTime lastModified;
 	private LocalDateTime created;
+	@JsonIgnore
 	private Boolean visible;
 	private String metaKeywords;
 	private String metaDescription;

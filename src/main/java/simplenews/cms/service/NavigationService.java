@@ -516,8 +516,8 @@ public class NavigationService implements INavigationService {
 			case PAGE -> {
 				StaticPage page = item.getPageId() == null ? null : targets.pages.get(item.getPageId());
 				if (page == null) return Resolved.broken(custom, "Page (deleted)");
-				return new Resolved(orDefault(custom, page.getTitle()), "/pages/" + page.getKey(),
-						"Page: /pages/" + page.getKey(), false, !Boolean.TRUE.equals(page.getVisible()));
+				return new Resolved(orDefault(custom, page.getTitle()), "/pages/" + page.getKey() + ".html",
+						"Page: /pages/" + page.getKey() + ".html", false, !Boolean.TRUE.equals(page.getVisible()));
 			}
 			case CATEGORY -> {
 				Category category = item.getCategoryId() == null ? null : targets.categories.get(item.getCategoryId());

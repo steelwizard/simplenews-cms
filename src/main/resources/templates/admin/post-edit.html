@@ -42,31 +42,34 @@
                     </select>
                     <input th:unless="${f.fieldType.name() == 'CHOICE'}"
                            th:id="${'field_' + f.id}" th:name="${'field_' + f.id}" th:value="${fieldValues[f.id]}"
-                           th:type="${f.fieldType.name() == 'DATE' ? 'date' : (f.fieldType.name() == 'URL' ? 'url' : (f.fieldType.name() == 'NUMBER' or f.fieldType.name() == 'RATING' ? 'number' : 'text'))}"
-                           th:attr="min=${f.minValue},max=${f.maxValue},step=${f.fieldType.name() == 'NUMBER' or f.fieldType.name() == 'RATING' ? 'any' : null}">
+                           th:type="${f.fieldType.name() == 'DATE' ? 'date' : (f.fieldType.name() == 'URL' ? 'url' : (f.fieldType.name() == 'NUMBER' or f.fieldType.name() == 'RATING' or f.fieldType.name() == 'PERCENT' ? 'number' : 'text'))}"
+                           th:attr="min=${f.minValue},max=${f.maxValue},step=${f.fieldType.name() == 'NUMBER' or f.fieldType.name() == 'RATING' or f.fieldType.name() == 'PERCENT' ? 'any' : null}">
+                    <span th:if="${f.fieldType.name() == 'PERCENT'}">%</span>
                     <br>
                 </th:block>
             </fieldset>
         </th:block>
-        Meta-Keywords: <input type="text" th:value="${post.metaKeywords}">
-        Meta-Description: <input type="text" th:value="${post.metaDescription}">
+        Meta-Keywords: <input type="text" name="metaKeywords" th:value="${post.metaKeywords}">
+        Meta-Description: <input type="text" name="metaDescription" th:value="${post.metaDescription}">
         <br>
-        <button th:formaction="@{${action}+'?action=0'}">Save</button>
+        <button th:formaction="@{${action}(action=0)}">Save</button>
         &nbsp;|
-        &nbsp;<button th:formaction="@{${action}+'?action=1'}">Preview</button>
-        &nbsp;|
-        &nbsp;<button th:formaction="@{${action}+'?action=2'}">Delete</button>
+        &nbsp;<button th:formaction="@{${action}(action=1)}">Preview</button>
+        <th:block th:if="${post.id != null}">
+            &nbsp;|
+            &nbsp;<button th:formaction="@{${action}(action=2)}">Delete</button>
+        </th:block>
 
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         <input type="hidden" name="id" th:value="${post.id}"/>
     </form>
 
     <hr>
 
+    <p th:if="${preview}"><b>Preview &ndash; not saved yet.</b> Press Save to keep your changes.</p>
     <div class="news-article">
         <h3>[[${post.title}]]</h3>
         <div class="article-info">[[${post.created}]] &nbsp; Author: [[${post.creator}]]</div>
-        <div class="article-content" th:utext="${post.content}"></div>
+        <div class="article-content" th:utext="${previewContent}"></div>
     </div>
 
     <script>

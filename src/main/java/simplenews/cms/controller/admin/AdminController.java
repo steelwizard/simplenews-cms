@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import simplenews.cms.data.api.ICategoryDto;
 import simplenews.cms.data.dto.INewsDto;
 import simplenews.cms.data.dto.NewsDto;
-import simplenews.cms.data.dto.UserDto;
 import simplenews.cms.security.PermissionEnum;
 import simplenews.cms.service.ICategoryService;
 import simplenews.cms.service.INewsService;
@@ -23,9 +22,9 @@ import simplenews.cms.service.IUserCategoryService;
 import simplenews.cms.service.IUserService;
 import simplenews.cms.service.exception.DuplicateKeyException;
 import simplenews.cms.service.exception.InsufficientPermissionException;
+import simplenews.cms.service.util.SanitizeUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.websocket.server.PathParam;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,6 +38,12 @@ public class AdminController {
 
 	public static final Logger LOG = Logger.getLogger(AdminController.class.getName());
 	public static final int ADMIN_RESULT_LIMIT = 50;
+
+	private static final String CREATE_ACTION = "/_private/admin/post-create.html";
+	private static final String EDIT_ACTION = "/_private/admin/post-edit.html";
+	private static final int ACTION_SAVE = 0;
+	private static final int ACTION_PREVIEW = 1;
+	private static final int ACTION_DELETE = 2;
 
 	@Autowired
 	INewsService newsService;
@@ -86,76 +91,113 @@ public class AdminController {
 	}
 
 	@GetMapping(path = "/post-create.html")
-	public String getArticleCreate(Model model, HttpServletRequest httpServletRequest) {
-		String user = httpServletRequest.getUserPrincipal().getName();
+	public String getArticleCreate(Model model) {
 		NewsDto post = new NewsDto();
 		post.setVisible(true);
-
-		UserDto userDto = userService.getByUsername(user);
-		List<Long> categoryIds = userCategoryService.getCategoryIdsByUser(userDto.getUsername());
-		List<ICategoryDto> categories = new ArrayList<>();
-		categories = categoryService.findMany(categoryIds);
-
-		model.addAttribute("post", post);
-		model.addAttribute("action", "/_private/admin/post-create.html");
-		model.addAttribute("categories", categories);
-		addReviewEditor(model, Map.of(), List.of());
-
-		return "admin/post-edit.html";
+		return renderEditor(model, CREATE_ACTION, post, Map.of(), List.of(), false);
 	}
 
 	@PostMapping(path = "/post-create.html")
-	public String postArticleCreate(Model model, @ModelAttribute NewsDto post, HttpServletRequest httpServletRequest) {
-
-
+	public String postArticleCreate(Model model,
+									@RequestParam(value = "action", defaultValue = "0") int action,
+									@ModelAttribute NewsDto post,
+									HttpServletRequest httpServletRequest) {
 		String user = httpServletRequest.getUserPrincipal().getName();
 		Map<Long, String> reviewValues = reviewService.readValues(httpServletRequest.getParameterMap());
+
+		if (action == ACTION_DELETE) {
+			return "redirect:/_private/admin/post-overview.html";
+		}
+		if (action == ACTION_PREVIEW) {
+			post.setCreator(user);
+			return renderEditor(model, CREATE_ACTION, post, reviewValues, List.of(), true);
+		}
+
 		Long reviewTypeId = reviewService.getReviewTypeIdForCategory(post.getCategory());
-		List<String> reviewErrors = reviewService.validateValues(reviewTypeId, reviewValues);
-		INewsDto created = new NewsDto();
-		if (reviewErrors.isEmpty()) {
+		List<String> errors = new ArrayList<>(reviewService.validateValues(reviewTypeId, reviewValues));
+		if (errors.isEmpty()) {
 			try {
-				created = newsService.createNews(post, user);
+				INewsDto created = newsService.createNews(post, user);
 				reviewService.saveValues(created.getId(), reviewTypeId, reviewValues);
 				return "redirect:/_private/admin/post-edit.html?id=" + created.getId();
 			} catch (InsufficientPermissionException e) {
-				e.printStackTrace();
+				LOG.warning(e.getMessage());
+				errors.add("You are not allowed to post in this category.");
 			} catch (DuplicateKeyException e) {
-				e.printStackTrace();
+				errors.add("The key is already used by another post.");
 			} catch (IllegalArgumentException e) {
 				LOG.severe(e.toString());
+				errors.add(e.getMessage());
 			}
-		} else {
-			created = post;
 		}
-
-		UserDto userDto = userService.getByUsername(user);
-		List<Long> categoryIds = userCategoryService.getCategoryIdsByUser(userDto.getUsername());
-		List<ICategoryDto> categories = new ArrayList<>();
-		categories = categoryService.findMany(categoryIds);
-
-		model.addAttribute("action", "/_private/admin/post-create.html");
-		model.addAttribute("post", created);
-		model.addAttribute("categories", categories);
-		addReviewEditor(model, reviewValues, reviewErrors);
-
-		return "admin/post-edit.html";
+		return renderEditor(model, CREATE_ACTION, post, reviewValues, errors, false);
 	}
 
 	@GetMapping(path = "/post-edit.html")
-	public String getArticleEdit(Model model, @PathParam("id") Long id) {
+	public String getArticleEdit(Model model, @RequestParam("id") Long id, HttpServletResponse res) throws IOException {
 		INewsDto post = newsService.getNewsById(id);
+		if (post == null) {
+			res.sendError(404);
+			return null;
+		}
+		return renderEditor(model, EDIT_ACTION, post, reviewService.getRawValues(id), List.of(), false);
+	}
 
-		UserDto userDto = userService.getByUsername(userService.getCurrentUserName());
-		List<Long> categoryIds = userCategoryService.getCategoryIdsByUser(userDto.getUsername());
-		List<ICategoryDto> categories = new ArrayList<>();
-		categories = categoryService.findMany(categoryIds);
+	@PostMapping(path = "/post-edit.html")
+	public String postArticleEdit(Model model,
+								  @RequestParam(value = "action", defaultValue = "0") int action,
+								  @ModelAttribute NewsDto post,
+								  HttpServletRequest httpServletRequest,
+								  HttpServletResponse httpServletResponse) throws IOException {
+
+		INewsDto stored = post.getId() != null ? newsService.getNewsById(post.getId()) : null;
+		if (stored == null) {
+			httpServletResponse.sendError(404);
+			return null;
+		}
+		if (action == ACTION_DELETE) {
+			return "redirect:/_private/admin/post-delete.html?id=" + stored.getId();
+		}
+
+		post.setCreator(stored.getCreator());
+		post.setCreated(stored.getCreated());
+		Map<Long, String> reviewValues = reviewService.readValues(httpServletRequest.getParameterMap());
+		if (action == ACTION_PREVIEW) {
+			return renderEditor(model, EDIT_ACTION, post, reviewValues, List.of(), true);
+		}
+
+		String user = httpServletRequest.getUserPrincipal().getName();
+		Long reviewTypeId = reviewService.getReviewTypeIdForCategory(post.getCategory());
+		List<String> errors = new ArrayList<>(reviewService.validateValues(reviewTypeId, reviewValues));
+		INewsDto edited = post;
+		if (errors.isEmpty()) {
+			try {
+				edited = newsService.updateNews(stored.getId(), post, user);
+				reviewService.saveValues(edited.getId(), reviewTypeId, reviewValues);
+			} catch (InsufficientPermissionException e) {
+				LOG.warning(e.getMessage());
+				errors.add("You are not allowed to edit this post or move it to this category.");
+			} catch (DuplicateKeyException e) {
+				errors.add("The key is already used by another post.");
+			} catch (IllegalArgumentException e) {
+				LOG.severe(e.toString());
+				errors.add(e.getMessage());
+			}
+		}
+		return renderEditor(model, EDIT_ACTION, edited, reviewValues, errors, false);
+	}
+
+	private String renderEditor(Model model, String action, INewsDto post, Map<Long, String> values,
+								List<String> errors, boolean preview) {
+		List<Long> categoryIds = userCategoryService.getCategoryIdsByUser(userService.getCurrentUserName());
+		List<ICategoryDto> categories = categoryService.findMany(categoryIds);
 
 		model.addAttribute("post", post);
-		model.addAttribute("action", "/_private/admin/post-edit.html");
+		model.addAttribute("action", action);
 		model.addAttribute("categories", categories);
-		addReviewEditor(model, reviewService.getRawValues(id), List.of());
-
+		model.addAttribute("preview", preview);
+		model.addAttribute("previewContent", post.getContent() != null ? SanitizeUtil.sanitize(post.getContent()) : "");
+		addReviewEditor(model, values, errors);
 		return "admin/post-edit.html";
 	}
 
@@ -166,94 +208,37 @@ public class AdminController {
 		model.addAttribute("reviewErrors", errors);
 	}
 
-	@PostMapping(path = "/post-edit.html")
-	public String postArticleEdit(Model model,
-												   @PathParam("action") Integer action,
-												   NewsDto post,
-												   HttpServletRequest httpServletRequest,
-								  				   HttpServletResponse httpServletResponse) throws IOException {
-
-		UserDto userDto = userService.getByUsername(userService.getCurrentUserName());
-		List<Long> categoryIds = userCategoryService.getCategoryIdsByUser(userDto.getUsername());
-		List<ICategoryDto> categories = new ArrayList<>();
-		categories = categoryService.findMany(categoryIds);
-		String user;
-		INewsDto edited;
-		Map<Long, String> reviewValues = reviewService.readValues(httpServletRequest.getParameterMap());
-		switch (action) {
-			case 0: // Save
-				user = httpServletRequest.getUserPrincipal().getName();
-				Long reviewTypeId = reviewService.getReviewTypeIdForCategory(post.getCategory());
-				List<String> reviewErrors = reviewService.validateValues(reviewTypeId, reviewValues);
-				edited = new NewsDto();
-				if (reviewErrors.isEmpty()) {
-					try {
-						edited = newsService.updateNews(post.getId(), post, user);
-						reviewService.saveValues(edited.getId(), reviewTypeId, reviewValues);
-					} catch (InsufficientPermissionException e) {
-						e.printStackTrace();
-					} catch (DuplicateKeyException e) {
-						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
-						LOG.severe(e.toString());
-					}
-				} else {
-					edited = post;
-				}
-
-				categories = categoryService.getAllCategoryDtos(false);
-				model.addAttribute("categories", categories);
-
-				model.addAttribute("action", "/_private/admin/post-edit.html");
-				model.addAttribute("post", edited);
-				addReviewEditor(model, reviewValues, reviewErrors);
-				return "admin/post-edit.html";
-			case 1: // Preview
-				categories = categoryService.getAllCategoryDtos(false);
-				model.addAttribute("categories", categories);
-
-				model.addAttribute("action", "/_private/admin/post-edit.html");
-				model.addAttribute("post", post);
-				addReviewEditor(model, reviewValues, List.of());
-				return "admin/post-edit.html";
-			case 2: // Delete
-				if(post.getId()==null) httpServletResponse.sendError(404);
-				else httpServletResponse.sendRedirect("/_private/admin/post-delete.html?id="+post.getId());
-				httpServletResponse.flushBuffer();
-				break;
-			default:
-				throw new IllegalArgumentException();
-		}
-		return null;
-	}
 	@GetMapping(path = "/post-delete.html")
-	public String postDelete(Model model, @RequestParam("id") Long id,
-								  HttpServletRequest httpServletRequest,
-								  HttpServletResponse res) {
+	public String postDelete(Model model, @RequestParam("id") Long id, HttpServletResponse res) throws IOException {
 		INewsDto post = newsService.getNewsById(id);
-		if (post==null) {
-			res.setStatus(404);
+		if (post == null) {
+			res.sendError(404);
 			return null;
 		}
 		model.addAttribute("post", post);
-		model.addAttribute("action", "/_private/admin/post-delete.html");
+		model.addAttribute("previewContent", post.getContent() != null ? SanitizeUtil.sanitize(post.getContent()) : "");
 		return "admin/post-delete.html";
 	}
 
 	@PostMapping(path = "/post-delete.html")
-	public void postDeleteConfirm(Model model, @PathParam("id") Long id,
-								  @RequestParam(value="del", required = false, defaultValue="false") boolean delete,
-								  HttpServletRequest req,
-								  HttpServletResponse res) throws IOException {
-		LOG.info("post-delete called. Post ID="+id+" deleted by "+req.getRemoteUser()+" from "+req.getRemoteAddr());
+	public String postDeleteConfirm(@RequestParam("id") Long id,
+									@RequestParam(value="del", required = false, defaultValue="false") boolean delete,
+									HttpServletRequest req,
+									HttpServletResponse res) throws IOException {
+		LOG.info("post-delete called. Post ID="+id+" by "+req.getRemoteUser()+" from "+req.getRemoteAddr());
 		if(delete) {
 			try {
 				newsService.deleteNews(id);
 			} catch (InsufficientPermissionException e) {
+				LOG.warning(e.getMessage());
 				res.sendError(403);
+				return null;
+			} catch (IllegalArgumentException e) {
+				res.sendError(404);
+				return null;
 			}
 		}
-		res.sendRedirect("/_private/admin/post-overview.html");
+		return "redirect:/_private/admin/post-overview.html";
 	}
 
 }

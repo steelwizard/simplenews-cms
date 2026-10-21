@@ -3,6 +3,7 @@ package simplenews.cms.service;
 import simplenews.cms.data.dto.INewsDto;
 import simplenews.cms.data.dto.ReviewFieldDisplayDto;
 import simplenews.cms.data.dto.ReviewFieldDto;
+import simplenews.cms.data.dto.ReviewJsonDto;
 import simplenews.cms.data.dto.ReviewTypeDto;
 import simplenews.cms.data.entity.ReviewField;
 import simplenews.cms.data.entity.ReviewType;
@@ -48,6 +49,8 @@ public interface IReviewService {
 	void saveValues(Long newsId, Long reviewTypeId, Map<Long, String> rawValues);
 
 	Map<Long, List<ReviewFieldDisplayDto>> getDisplayValues(List<INewsDto> news, boolean listOnly);
+
+	List<ReviewJsonDto> toJson(List<INewsDto> news);
 
 	List<INewsDto> findReviews(ReviewType type, ReviewField filterField, String filterValue, boolean byRating, int limit, int offset);
 

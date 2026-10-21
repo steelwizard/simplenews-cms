@@ -29,7 +29,7 @@
             <td>[[${page.created}]]</td>
             <td>[[${page.creator}]]</td>
             <td>#[[${page.id}]]</td>
-            <td><a th:href="@{/pages/{key}(key=${page.key})}">/pages/[[${page.key}]]</a></td>
+            <td><a th:href="@{/pages/{key}.html(key=${page.key})}">/pages/[[${page.key}]].html</a></td>
             <td><a th:href="@{/_private/admin/page-edit.html?id={id}(id=${page.id})}">Edit</a></td>
             <td><a th:href="@{/_private/admin/page-delete.html?id={id}(id=${page.id})}">Delete</a></td>
             <td><input type="checkbox" th:checked="${page.visible}" disabled></td>
