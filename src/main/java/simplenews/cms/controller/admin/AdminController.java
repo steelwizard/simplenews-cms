@@ -18,6 +18,7 @@ import simplenews.cms.security.PermissionEnum;
 import simplenews.cms.service.ICategoryService;
 import simplenews.cms.service.INewsService;
 import simplenews.cms.service.IPermissionService;
+import simplenews.cms.service.IReviewService;
 import simplenews.cms.service.IUserCategoryService;
 import simplenews.cms.service.IUserService;
 import simplenews.cms.service.exception.DuplicateKeyException;
@@ -29,6 +30,7 @@ import jakarta.websocket.server.PathParam;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @Controller
@@ -48,6 +50,8 @@ public class AdminController {
 	IUserCategoryService userCategoryService;
 	@Autowired
 	IUserService userService;
+	@Autowired
+	IReviewService reviewService;
 
 	@GetMapping
 	public String getAdmin(){
@@ -95,6 +99,7 @@ public class AdminController {
 		model.addAttribute("post", post);
 		model.addAttribute("action", "/_private/admin/post-create.html");
 		model.addAttribute("categories", categories);
+		addReviewEditor(model, Map.of(), List.of());
 
 		return "admin/post-edit.html";
 	}
@@ -104,15 +109,24 @@ public class AdminController {
 
 
 		String user = httpServletRequest.getUserPrincipal().getName();
+		Map<Long, String> reviewValues = reviewService.readValues(httpServletRequest.getParameterMap());
+		Long reviewTypeId = reviewService.getReviewTypeIdForCategory(post.getCategory());
+		List<String> reviewErrors = reviewService.validateValues(reviewTypeId, reviewValues);
 		INewsDto created = new NewsDto();
-		try {
-			created = newsService.createNews(post, user);
-		} catch (InsufficientPermissionException e) {
-			e.printStackTrace();
-		} catch (DuplicateKeyException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			LOG.severe(e.toString());
+		if (reviewErrors.isEmpty()) {
+			try {
+				created = newsService.createNews(post, user);
+				reviewService.saveValues(created.getId(), reviewTypeId, reviewValues);
+				return "redirect:/_private/admin/post-edit.html?id=" + created.getId();
+			} catch (InsufficientPermissionException e) {
+				e.printStackTrace();
+			} catch (DuplicateKeyException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				LOG.severe(e.toString());
+			}
+		} else {
+			created = post;
 		}
 
 		UserDto userDto = userService.getByUsername(user);
@@ -123,6 +137,7 @@ public class AdminController {
 		model.addAttribute("action", "/_private/admin/post-create.html");
 		model.addAttribute("post", created);
 		model.addAttribute("categories", categories);
+		addReviewEditor(model, reviewValues, reviewErrors);
 
 		return "admin/post-edit.html";
 	}
@@ -139,8 +154,16 @@ public class AdminController {
 		model.addAttribute("post", post);
 		model.addAttribute("action", "/_private/admin/post-edit.html");
 		model.addAttribute("categories", categories);
+		addReviewEditor(model, reviewService.getRawValues(id), List.of());
 
 		return "admin/post-edit.html";
+	}
+
+	private void addReviewEditor(Model model, Map<Long, String> values, List<String> errors) {
+		model.addAttribute("reviewTypes", reviewService.getReviewTypes());
+		model.addAttribute("reviewFields", reviewService.getActiveFieldsByType());
+		model.addAttribute("fieldValues", values);
+		model.addAttribute("reviewErrors", errors);
 	}
 
 	@PostMapping(path = "/post-edit.html")
@@ -156,18 +179,26 @@ public class AdminController {
 		categories = categoryService.findMany(categoryIds);
 		String user;
 		INewsDto edited;
+		Map<Long, String> reviewValues = reviewService.readValues(httpServletRequest.getParameterMap());
 		switch (action) {
 			case 0: // Save
 				user = httpServletRequest.getUserPrincipal().getName();
+				Long reviewTypeId = reviewService.getReviewTypeIdForCategory(post.getCategory());
+				List<String> reviewErrors = reviewService.validateValues(reviewTypeId, reviewValues);
 				edited = new NewsDto();
-				try {
-					edited = newsService.updateNews(post.getId(), post, user);
-				} catch (InsufficientPermissionException e) {
-					e.printStackTrace();
-				} catch (DuplicateKeyException e) {
-					e.printStackTrace();
-				} catch (IllegalArgumentException e) {
-					LOG.severe(e.toString());
+				if (reviewErrors.isEmpty()) {
+					try {
+						edited = newsService.updateNews(post.getId(), post, user);
+						reviewService.saveValues(edited.getId(), reviewTypeId, reviewValues);
+					} catch (InsufficientPermissionException e) {
+						e.printStackTrace();
+					} catch (DuplicateKeyException e) {
+						e.printStackTrace();
+					} catch (IllegalArgumentException e) {
+						LOG.severe(e.toString());
+					}
+				} else {
+					edited = post;
 				}
 
 				categories = categoryService.getAllCategoryDtos(false);
@@ -175,6 +206,7 @@ public class AdminController {
 
 				model.addAttribute("action", "/_private/admin/post-edit.html");
 				model.addAttribute("post", edited);
+				addReviewEditor(model, reviewValues, reviewErrors);
 				return "admin/post-edit.html";
 			case 1: // Preview
 				categories = categoryService.getAllCategoryDtos(false);
@@ -182,6 +214,7 @@ public class AdminController {
 
 				model.addAttribute("action", "/_private/admin/post-edit.html");
 				model.addAttribute("post", post);
+				addReviewEditor(model, reviewValues, List.of());
 				return "admin/post-edit.html";
 			case 2: // Delete
 				if(post.getId()==null) httpServletResponse.sendError(404);

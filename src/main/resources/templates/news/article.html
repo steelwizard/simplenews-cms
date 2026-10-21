@@ -7,7 +7,7 @@
 
         <title th:text="${title}"></title>
         <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
-        <link rel="canonical" href="@{${canonicalLink}}"/>
+        <link rel="canonical" th:href="@{${canonicalLink}}"/>
     </head>
     <body class="flex">
         <div class="header">
@@ -19,7 +19,7 @@
 
         </div>
         <div class="main-container">
-            <div th:insert="~{@{fragment/category-fragment.html} :: category}" th:with="maincategories=${categories}" class="navigation"></div>
+            <div th:insert="~{fragment/menu :: sidebar(${sidebarMenu})}" class="navigation"></div>
             <div class="news-container">
                 <div th:each="post : ${newslist}" class="news-article">
 
@@ -36,6 +36,7 @@
                           ([[${post.created}]])
                         </span>
                     </div>
+                    <dl th:replace="~{fragment/review-fields :: review-fields(${reviewValues[post.id]})}"></dl>
                     <div class="article-content" th:utext="${post.content}"></div>
                     <br>
                     Permalink: <a th:href="@{${permaLink}}">[[${permaLink}]]</a>

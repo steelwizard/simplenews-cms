@@ -45,4 +45,6 @@ public interface ICategory {
 	void setMetaKeywords(String metaKeywords);
 	String getMetaDescription();
 	void setMetaDescription(String metaDescription);
+	Long getReviewType();
+	void setReviewType(Long reviewType);
 }

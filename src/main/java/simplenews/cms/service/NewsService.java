@@ -8,6 +8,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import simplenews.cms.data.api.INews;
 import simplenews.cms.data.dto.INewsDto;
+import simplenews.cms.data.repository.NewsFieldValueRepository;
 import simplenews.cms.data.repository.NewsRepository;
 import simplenews.cms.data.dto.NewsDto;
 import simplenews.cms.data.dto.UserDto;
@@ -37,6 +38,8 @@ public class NewsService implements INewsService {
 
 	@Autowired
 	NewsRepository newsRepository;
+	@Autowired
+	NewsFieldValueRepository newsFieldValueRepository;
 //	@Autowired
 //	CategoryRepository categoryRepository;
 	@Autowired
@@ -258,6 +261,7 @@ public class NewsService implements INewsService {
 		if(!permissionService.canDelete(new NewsDto(newsDto))) {
 			throw new InsufficientPermissionException("Unauthorized article deletion by user "+userService.getCurrentUserName()+" for article id "+id);
 		}
+		newsFieldValueRepository.deleteByNews(id);
 		newsRepository.deleteById(id);
 		LOG.info("deleting post "+id);
 	}
@@ -267,6 +271,7 @@ public class NewsService implements INewsService {
 		if(!permissionService.canDelete(dto)) {
 			throw new InsufficientPermissionException("Unauthorized article deletion by user "+userService.getCurrentUserName()+" for article id "+dto.getId());
 		}
+		newsFieldValueRepository.deleteByNews(dto.getId());
 		newsRepository.deleteById(dto.getId());
 	}
 

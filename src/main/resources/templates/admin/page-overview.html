@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
+</head>
+<body>
+    <section th:insert="~{@{admin/admin-navigation} :: admin-navigation}"></section>
+
+    [ <a th:href="@{/_private/admin/page-create.html}">New Page</a> ]
+    <br><br>
+    <table border="1">
+        <tr>
+            <th>Title</th>
+            <th>Created</th>
+            <th>Author</th>
+            <th>Id</th>
+            <th>Address</th>
+            <th>Edit</th>
+            <th>Delete</th>
+            <th>Published</th>
+        </tr>
+        <tr th:if="${pages.isEmpty()}">
+            <td colspan="8">No pages yet.</td>
+        </tr>
+        <tr th:each="page : ${pages}">
+            <td><b>[[${page.title}]]</b></td>
+            <td>[[${page.created}]]</td>
+            <td>[[${page.creator}]]</td>
+            <td>#[[${page.id}]]</td>
+            <td><a th:href="@{/pages/{key}(key=${page.key})}">/pages/[[${page.key}]]</a></td>
+            <td><a th:href="@{/_private/admin/page-edit.html?id={id}(id=${page.id})}">Edit</a></td>
+            <td><a th:href="@{/_private/admin/page-delete.html?id={id}(id=${page.id})}">Delete</a></td>
+            <td><input type="checkbox" th:checked="${page.visible}" disabled></td>
+        </tr>
+    </table>
+    <div>
+        <hr>
+        <a th:href="${'?p='}+${pageNumber-1}" th:if="${pageNumber>0}">Back</a> |
+        Page [[${pageNumber}]]
+        |<a th:href="${'?p='}+${pageNumber+1}" th:if="${hasNextPage}">Next</a>
+    </div>
+
+</body>
+</html>

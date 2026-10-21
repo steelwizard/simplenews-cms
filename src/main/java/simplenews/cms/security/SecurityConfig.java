@@ -17,9 +17,10 @@ public class SecurityConfig {
 			.formLogin(Customizer.withDefaults())
 			.authorizeHttpRequests(auth -> auth
 					// Specific Admin-only routes
-					.requestMatchers("/_private/admin/user-*", "/_private/admin/site-settings*", "/actuator/*")
+					.requestMatchers("/_private/admin/user-*", "/_private/admin/site-settings*", "/actuator/*",
+							"/_private/admin/navigation*", "/_private/admin/review-*")
 					.hasRole(RoleEnum.ADMIN.name())
-					.requestMatchers("/_private/admin/category*")
+					.requestMatchers("/_private/admin/category*", "/_private/admin/page*")
 					.hasAnyRole(RoleEnum.ADMIN.name(), RoleEnum.EDITOR.name())
 					// General Admin area access
 					.requestMatchers("/_private/admin", "/_private/admin/**").hasAnyRole(

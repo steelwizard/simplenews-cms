@@ -1,35 +1,36 @@
 package simplenews.cms.data.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import java.sql.Timestamp;
 
-public class Page {
+@Entity
+@Table(name = "page")
+public class StaticPage {
 	@Id
-	@Column
-	@GeneratedValue(strategy= GenerationType.IDENTITY)
+	@Column(name = "id")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "title")
+	@Column(name = "title", nullable = false, length = 200)
 	private String title;
 
-	@Column(name = "key")
+	@Column(name = "key", nullable = false, unique = true, length = 80)
 	private String key;
 
-	@Column(name = "content")
+	@Column(name = "content", columnDefinition = "text")
 	private String content;
-
-	@ManyToOne
-	@JoinColumn(name = "category")
-	private Category category;
 
 	@Column(name = "creator")
 	private String creator;
+
+	@Column(name = "last_modified_by")
+	private String lastModifiedBy;
 
 	@Column(name = "last_modified")
 	private Timestamp lastModified;
@@ -39,6 +40,12 @@ public class Page {
 
 	@Column(name = "visible")
 	private Boolean visible;
+
+	@Column(name = "meta_keywords")
+	private String metaKeywords;
+
+	@Column(name = "meta_description")
+	private String metaDescription;
 
 	public Long getId() {
 		return id;
@@ -72,20 +79,20 @@ public class Page {
 		this.content = content;
 	}
 
-	public Category getCategory() {
-		return category;
-	}
-
-	public void setCategory(Category category) {
-		this.category = category;
-	}
-
 	public String getCreator() {
 		return creator;
 	}
 
 	public void setCreator(String creator) {
 		this.creator = creator;
+	}
+
+	public String getLastModifiedBy() {
+		return lastModifiedBy;
+	}
+
+	public void setLastModifiedBy(String lastModifiedBy) {
+		this.lastModifiedBy = lastModifiedBy;
 	}
 
 	public Timestamp getLastModified() {
@@ -110,5 +117,21 @@ public class Page {
 
 	public void setVisible(Boolean visible) {
 		this.visible = visible;
+	}
+
+	public String getMetaKeywords() {
+		return metaKeywords;
+	}
+
+	public void setMetaKeywords(String metaKeywords) {
+		this.metaKeywords = metaKeywords;
+	}
+
+	public String getMetaDescription() {
+		return metaDescription;
+	}
+
+	public void setMetaDescription(String metaDescription) {
+		this.metaDescription = metaDescription;
 	}
 }

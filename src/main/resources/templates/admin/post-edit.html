@@ -9,19 +9,45 @@
 
     [ <a th:href="@{/_private/admin/post-overview.html}">Back</a> ]
     <hr>
+    <div th:if="${reviewErrors != null and !reviewErrors.isEmpty()}">
+        <b>Not saved:</b>
+        <ul>
+            <li th:each="e : ${reviewErrors}">[[${e}]]</li>
+        </ul>
+    </div>
     <form th:action="@{${action}}" th:object="${post}" method="POST">
         Title: <input type="text" name="title" th:value="${post.title}"><br>
         Key: <input type="text" name="key" th:value="${post.key}"><br>
         Visible: <input type="checkbox" name="visible" th:checked="${post.visible}"><br>
         <textarea cols="80" rows="30" name="content">[[${post.content}]]</textarea>
         <br>
-        Category: <select th:field="*{category}">
+        Category: <select id="category-select" th:field="*{category}">
             <option th:each="current : ${categories}"
                     th:value="${current.name}"
-                    th:text="${current.name}">
+                    th:text="${current.name}"
+                    th:attr="data-review-type=${current.reviewType}">
             </option>
         </select>
         <br>
+        <th:block th:if="${reviewTypes != null}" th:each="rt : ${reviewTypes}">
+            <fieldset class="review-editor" th:attr="data-review-type=${rt.id}"
+                      th:if="${reviewFields[rt.id] != null and !reviewFields[rt.id].isEmpty()}">
+                <legend>[[${rt.title}]] details (only saved for [[${rt.title}]] categories)</legend>
+                <th:block th:each="f : ${reviewFields[rt.id]}">
+                    <label th:for="${'field_' + f.id}">[[${f.label}]]<span th:if="${f.required}">*</span>:</label>
+                    <select th:if="${f.fieldType.name() == 'CHOICE'}" th:id="${'field_' + f.id}" th:name="${'field_' + f.id}">
+                        <option value="">---</option>
+                        <option th:each="c : ${f.choiceList}" th:value="${c}" th:text="${c}"
+                                th:selected="${fieldValues[f.id] == c}"></option>
+                    </select>
+                    <input th:unless="${f.fieldType.name() == 'CHOICE'}"
+                           th:id="${'field_' + f.id}" th:name="${'field_' + f.id}" th:value="${fieldValues[f.id]}"
+                           th:type="${f.fieldType.name() == 'DATE' ? 'date' : (f.fieldType.name() == 'URL' ? 'url' : (f.fieldType.name() == 'NUMBER' or f.fieldType.name() == 'RATING' ? 'number' : 'text'))}"
+                           th:attr="min=${f.minValue},max=${f.maxValue},step=${f.fieldType.name() == 'NUMBER' or f.fieldType.name() == 'RATING' ? 'any' : null}">
+                    <br>
+                </th:block>
+            </fieldset>
+        </th:block>
         Meta-Keywords: <input type="text" th:value="${post.metaKeywords}">
         Meta-Description: <input type="text" th:value="${post.metaDescription}">
         <br>
@@ -43,5 +69,20 @@
         <div class="article-content" th:utext="${post.content}"></div>
     </div>
 
+    <script>
+        (function () {
+            var select = document.getElementById('category-select');
+            if (!select) return;
+            function update() {
+                var option = select.options[select.selectedIndex];
+                var type = option ? option.getAttribute('data-review-type') : null;
+                document.querySelectorAll('fieldset.review-editor').forEach(function (el) {
+                    el.style.display = el.getAttribute('data-review-type') === type ? '' : 'none';
+                });
+            }
+            select.addEventListener('change', update);
+            update();
+        })();
+    </script>
 </body>
 </html>

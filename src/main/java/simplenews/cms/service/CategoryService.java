@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.ApplicationScope;
 import simplenews.cms.data.api.ICategoryDto;
@@ -12,7 +13,10 @@ import simplenews.cms.data.entity.Category;
 import simplenews.cms.data.entity.CategoryTypeEnum;
 import simplenews.cms.data.entity.News;
 import simplenews.cms.data.repository.CategoryRepository;
+import simplenews.cms.data.repository.NavigationItemRepository;
 import simplenews.cms.data.repository.NewsRepository;
+import simplenews.cms.data.repository.ReviewTypeRepository;
+import simplenews.cms.service.event.CategoryCreatedEvent;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -31,6 +35,15 @@ public class CategoryService implements ICategoryService {
 
 	@Autowired
 	private NewsRepository newsRepository;
+
+	@Autowired
+	private NavigationItemRepository navigationRepository;
+
+	@Autowired
+	private ReviewTypeRepository reviewTypeRepository;
+
+	@Autowired
+	private ApplicationEventPublisher eventPublisher;
 
 //	private List<ICategoryDto> categories = null;
 
@@ -92,10 +105,19 @@ public class CategoryService implements ICategoryService {
 		return new CategoryDto(categoryRepository.getReferenceById(id));
 	}
 
-	@CacheEvict(cacheNames={"category", "categoryDto", "rootCategory"}, allEntries = true)
+	@CacheEvict(cacheNames={"category", "categoryDto", "rootCategory", NavigationService.NAVIGATION_CACHE}, allEntries = true)
 	public ICategoryDto saveCategory(ICategoryDto categoryDto, String user) {
 		Category category;
+		boolean created = categoryDto.getId() == null;
 		LOG.info("saving category "+categoryDto.getName());
+		if (categoryDto.getType() == null) categoryDto.setType(CategoryTypeEnum.NEWS);
+		if (categoryDto.getType() == CategoryTypeEnum.REVIEW) {
+			if (categoryDto.getReviewType() == null || !reviewTypeRepository.existsById(categoryDto.getReviewType())) {
+				throw new IllegalArgumentException("Review categories need a review type.");
+			}
+		} else {
+			categoryDto.setReviewType(null);
+		}
 		if (categoryDto.getId() != null) {
 			category = categoryRepository.getReferenceById(categoryDto.getId());
 			LOG.info("Updating category #"+categoryDto.getId());
@@ -107,13 +129,15 @@ public class CategoryService implements ICategoryService {
 			category.setVisible(categoryDto.isVisible());
 			category.setMetaKeywords(categoryDto.getMetaKeywords());
 			category.setMetaDescription(categoryDto.getMetaDescription());
+			category.setReviewType(categoryDto.getReviewType());
 		} else {
 			LOG.info("Creating new category "+categoryDto.getName());
 			category = new Category(categoryDto);
 			category.setName(categoryDto.getName());
 			category.setTitle(categoryDto.getTitle());
 			category.setParent(categoryDto.getParent());
-			category.setType(CategoryTypeEnum.NEWS);
+			category.setType(categoryDto.getType());
+			category.setReviewType(categoryDto.getReviewType());
 			category.setCreator(user);
 			category.setCreated(new Timestamp(System.currentTimeMillis()));
 			category.setVisible(categoryDto.isVisible());
@@ -123,13 +147,18 @@ public class CategoryService implements ICategoryService {
 		category.setLastModified(new Timestamp(System.currentTimeMillis()));
 		categoryRepository.save(category);
 		refreshCategories();
+		if (created) {
+			eventPublisher.publishEvent(new CategoryCreatedEvent(category.getId()));
+		}
 		return new CategoryDto(category);
 	}
 
 	@Transactional
 	@Override
-	@CacheEvict(cacheNames={"category", "categoryDto", "rootCategory"}, allEntries = true)
+	@CacheEvict(cacheNames={"category", "categoryDto", "rootCategory", NavigationService.NAVIGATION_CACHE}, allEntries = true)
 	public void deleteCategory(Long id) {
+		navigationRepository.deleteChildrenOfCategory(id);
+		navigationRepository.deleteByCategory(id);
 		categoryRepository.makeRootCategoryIfChildOf(id);
 		List<Category> categoryList = categoryRepository.findAll();
 		categoryList.removeIf(cat -> cat.getId().equals(id));
@@ -141,7 +170,7 @@ public class CategoryService implements ICategoryService {
 		refreshCategories();
 	}
 
-	@CacheEvict(cacheNames={"category", "categoryDto", "rootCategory"}, allEntries = true)
+	@CacheEvict(cacheNames={"category", "categoryDto", "rootCategory", NavigationService.NAVIGATION_CACHE}, allEntries = true)
 	public void refreshCategories() {
 		LOG.info("Evicting category cache.");
 //		LOG.info("Loading Categories from database.");

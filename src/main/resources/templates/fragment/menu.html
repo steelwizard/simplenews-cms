@@ -1,0 +1,22 @@
+<a th:fragment="link(item)" th:if="${item.href != null}" th:href="@{${item.href}}"
+   th:target="${item.newTab} ? '_blank'" th:rel="${item.newTab} ? 'noopener'">[[${item.label}]]</a>
+
+<div th:fragment="sidebar(items)" class="menu-sidebar">
+    <ul>
+        <li th:each="item : ${items}">
+            <th:block th:if="${item.categoryTree != null}">
+                <span th:if="${item.label != null}" class="menu-heading">[[${item.label}]]</span>
+                <div th:insert="~{fragment/category-fragment.html :: category}" th:with="maincategories=${item.categoryTree}"></div>
+            </th:block>
+            <th:block th:if="${item.categoryTree == null}">
+                <a th:replace="~{fragment/menu :: link(${item})}"></a>
+                <span th:if="${item.href == null}" class="menu-heading">[[${item.label}]]</span>
+                <ul th:if="${!item.children.isEmpty()}">
+                    <li th:each="child : ${item.children}">
+                        <a th:replace="~{fragment/menu :: link(${child})}"></a>
+                    </li>
+                </ul>
+            </th:block>
+        </li>
+    </ul>
+</div>

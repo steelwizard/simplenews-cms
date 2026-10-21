@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="keywords" th:content="${metaKeywords}">
+        <meta name="description" th:content="${metaDescription}">
+
+        <title th:text="${title}"></title>
+        <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
+        <link rel="canonical" th:href="@{${canonicalLink}}"/>
+    </head>
+    <body class="flex">
+        <div class="header">
+            <div th:insert="~{@{fragment/header-navigation}::header-navigation}" class="header-navigation"></div>
+            <a th:href="@{/reviews/{key}.html(key=${reviewType.key})}">
+                <h1>[[${reviewType.title}]]</h1>
+            </a>
+            <h2 th:text="${title}"></h2>
+        </div>
+        <div class="main-container">
+            <div th:insert="~{fragment/menu :: sidebar(${sidebarMenu})}" class="navigation"></div>
+            <div class="news-container">
+                <div th:if="${hasRating}">
+                    Sort by:
+                    <a th:if="${byRating}" th:href="@{${newestUrl}}">newest</a>
+                    <b th:unless="${byRating}">newest</b>
+                    |
+                    <a th:unless="${byRating}" th:href="@{${ratingUrl}}">rating</a>
+                    <b th:if="${byRating}">rating</b>
+                </div>
+                <div th:if="${filtered}">
+                    <a th:href="@{${allUrl}}">Show all</a>
+                </div>
+                <div th:each="post : ${newslist}" class="news-article">
+                    <div class="article-info">
+                        <span>
+                          <a class="headline" th:href="@{/news/{id}-{key}.html(id=${post.id}, key=${post.key})}">
+                            [[${post.title}]]
+                          </a>
+                        </span>&nbsp;
+                        <span class="article-info-meta">
+                          [[${post.creator}]]
+                        </span>&nbsp;
+                        <span class="article-info-meta">
+                          ([[${post.created}]])
+                        </span>
+                    </div>
+                    <dl th:replace="~{fragment/review-fields :: review-fields(${reviewValues[post.id]})}"></dl>
+                    <div class="article-content" th:utext="${post.content}"></div>
+                </div>
+                <div th:if="${newslist.isEmpty()}">
+                    No reviews found.
+                </div>
+                <hr>
+                <div class="clearfix">
+                    <span th:if="${!newslist.isEmpty()}">
+                        <a th:if="${prevUrl != null}" th:href="@{${prevUrl}}">Back</a>&nbsp;|&nbsp;
+                        &nbsp;Page [[${page}]]&nbsp;
+                        |&nbsp;<a th:if="${nextUrl != null}" th:href="@{${nextUrl}}">Next</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

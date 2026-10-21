@@ -13,6 +13,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import simplenews.cms.data.api.ICategoryDto;
 import simplenews.cms.data.dto.CategoryDto;
 import simplenews.cms.service.ICategoryService;
+import simplenews.cms.service.IReviewService;
 
 import java.util.List;
 
@@ -22,6 +23,8 @@ public class CategoryAdminController {
 
 	@Autowired
 	ICategoryService categoryService;
+	@Autowired
+	IReviewService reviewService;
 
 	@GetMapping("/category-overview.html")
 	public String getCategoryEdit(Model model) {
@@ -36,23 +39,28 @@ public class CategoryAdminController {
 		List<ICategoryDto> categoryDtos = categoryService.getAllCategoryDtos(false);
 		model.addAttribute("categories", categoryDtos);
 		model.addAttribute("category", categoryDto);
+		model.addAttribute("reviewTypes", reviewService.getReviewTypes());
 		return "admin/category-edit.html";
 	}
 
 	@PostMapping("/category-edit.html")
-	public RedirectView postSaveCategory(Model model,
+	public String postSaveCategory(Model model,
 								   @ModelAttribute CategoryDto category,
 								   HttpServletRequest httpServletRequest,
 								   @PathParam("id") Long id) {
 
 		String user = httpServletRequest.getUserPrincipal().getName();
 		category.setId(id);
-		ICategoryDto categoryDto = categoryService.saveCategory(category, user);
-		List<ICategoryDto> categoryDtos = categoryService.getAllCategoryDtos(false);
-		model.addAttribute("categories", categoryDtos);
-		model.addAttribute("category", categoryDto);
-		RedirectView redirect = new RedirectView("/_private/admin/category-overview.html");
-		return redirect;
+		try {
+			categoryService.saveCategory(category, user);
+		} catch (IllegalArgumentException e) {
+			model.addAttribute("categories", categoryService.getAllCategoryDtos(false));
+			model.addAttribute("category", category);
+			model.addAttribute("reviewTypes", reviewService.getReviewTypes());
+			model.addAttribute("error", e.getMessage());
+			return "admin/category-edit.html";
+		}
+		return "redirect:/_private/admin/category-overview.html";
 	}
 
 	@GetMapping("/category-create.html")
@@ -61,6 +69,7 @@ public class CategoryAdminController {
 		List<ICategoryDto> categoryDtos = categoryService.getAllCategoryDtos(false);
 		model.addAttribute("categories", categoryDtos);
 		model.addAttribute("category", categoryDto);
+		model.addAttribute("reviewTypes", reviewService.getReviewTypes());
 		return "admin/category-edit.html";
 	}
 

@@ -5,6 +5,7 @@
     <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
 </head>
 <body>
+    <p th:if="${error}"><b>[[${error}]]</b></p>
     <form form method="post" th:action="@{/_private/admin/category-edit.html}" th:object="${category}" >
         <br>ID: <input id="id-input" th:field="*{id}" readonly><br>
         <label for="title-input">Title:</label>
@@ -30,7 +31,14 @@
         <label for="type-select">Type: </label>
         <select id="type-select" th:field="*{type}">
             <option value="NEWS">NEWS</option>
+            <option value="REVIEW">REVIEW</option>
         </select>
+        <label for="review-type-select">Review type: </label>
+        <select id="review-type-select" th:field="*{reviewType}">
+            <option th:value="${null}">---none---</option>
+            <option th:each="rt : ${reviewTypes}" th:value="${rt.id}" th:text="${rt.title}"></option>
+        </select>
+        <span th:if="${reviewTypes.isEmpty()}">(create one under <a th:href="@{/_private/admin/review-type-overview.html}">Reviews</a> first)</span>
         <br>
         [&nbsp;
         <button type="submit">

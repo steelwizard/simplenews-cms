@@ -53,6 +53,9 @@ public class Category implements ICategory {
 	@Column(name = "meta_description")
 	private String metaDescription;
 
+	@Column(name = "review_type")
+	private Long reviewType;
+
 	public Category(){}
 	public Category(ICategoryDto categoryDto){
 		this.id = categoryDto.getId();
@@ -163,5 +166,15 @@ public class Category implements ICategory {
 
 	public void setMetaDescription(String metaDescription) {
 		this.metaDescription = metaDescription;
+	}
+
+	@Override
+	public Long getReviewType() {
+		return reviewType;
+	}
+
+	@Override
+	public void setReviewType(Long reviewType) {
+		this.reviewType = reviewType;
 	}
 }

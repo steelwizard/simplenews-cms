@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
+</head>
+<body>
+    [ <a th:href="@{/_private/admin/review-type-overview.html}">Back</a> ]
+    <hr>
+    <h3>[[${title}]]</h3>
+    <p th:if="${error}"><b>[[${error}]]</b></p>
+    <form method="post" th:action="@{/_private/admin/review-type-edit.html}" th:object="${reviewType}">
+        <input type="hidden" th:field="*{id}">
+        <label for="title-input">Title:</label>
+        <input id="title-input" type="text" th:field="*{title}" placeholder="Music album">
+        <br>
+        <label for="key-input">Key:</label>
+        <input id="key-input" type="text" th:field="*{key}" placeholder="music">
+        (used in the address /reviews/&lt;key&gt;.html; generated from the title if empty)
+        <br><br>
+        <button type="submit">Save</button>
+    </form>
+
+    <th:block th:if="${reviewType.id != null}">
+        <hr>
+        <p>
+            Used by categories:
+            [[${categoriesUsing.isEmpty() ? 'none yet - set a category to type REVIEW and pick this review type' : #strings.listJoin(categoriesUsing, ', ')}]]
+        </p>
+        <h3>Fields</h3>
+        [ <a th:href="@{/_private/admin/review-field-create.html(type=${reviewType.id})}">New field</a> ]
+        <br><br>
+        <table border="1">
+            <tr>
+                <th>Label</th>
+                <th>Key</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>In lists</th>
+                <th>Filterable</th>
+                <th>Active</th>
+                <th>Order</th>
+                <th>Edit</th>
+            </tr>
+            <tr th:if="${fields.isEmpty()}">
+                <td colspan="9">No fields yet.</td>
+            </tr>
+            <tr th:each="f, stat : ${fields}">
+                <td><b>[[${f.label}]]</b></td>
+                <td>[[${f.key}]]</td>
+                <td>[[${f.fieldType}]]</td>
+                <td><input type="checkbox" th:checked="${f.required}" disabled></td>
+                <td><input type="checkbox" th:checked="${f.showInList}" disabled></td>
+                <td><input type="checkbox" th:checked="${f.filterable}" disabled></td>
+                <td><input type="checkbox" th:checked="${f.active}" disabled></td>
+                <td>
+                    <form method="post" th:action="@{/_private/admin/review-field-move.html}" style="display:inline">
+                        <input type="hidden" name="id" th:value="${f.id}">
+                        <button name="dir" value="up" th:disabled="${stat.first}">&uarr;</button>
+                        <button name="dir" value="down" th:disabled="${stat.last}">&darr;</button>
+                    </form>
+                </td>
+                <td><a th:href="@{/_private/admin/review-field-edit.html(id=${f.id})}">Edit</a></td>
+            </tr>
+        </table>
+    </th:block>
+</body>
+</html>

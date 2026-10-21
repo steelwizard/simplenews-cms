@@ -32,6 +32,7 @@ public class CategoryDto implements ICategoryDto {
 		this.created = category.getCreated();
 		this.metaKeywords = category.getMetaKeywords();
 		this.metaDescription = category.getMetaDescription();
+		this.reviewType = category.getReviewType();
 	}
 	public CategoryDto() {}
 
@@ -54,6 +55,8 @@ public class CategoryDto implements ICategoryDto {
 	private String metaKeywords;
 
 	private String metaDescription;
+
+	private Long reviewType;
 
 	@Override
 	public Long getId() {
@@ -156,5 +159,15 @@ public class CategoryDto implements ICategoryDto {
 
 	public void setMetaDescription(String metaDescription) {
 		this.metaDescription = metaDescription;
+	}
+
+	@Override
+	public Long getReviewType() {
+		return reviewType;
+	}
+
+	@Override
+	public void setReviewType(Long reviewType) {
+		this.reviewType = reviewType;
 	}
 }

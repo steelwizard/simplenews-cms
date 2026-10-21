@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
+</head>
+<body>
+    [ <a th:href="@{/_private/admin/review-type-edit.html(id=${reviewType.id})}">Back to [[${reviewType.title}]]</a> ]
+    <hr>
+    <h3>[[${title}]]</h3>
+    <p th:if="${error}"><b>[[${error}]]</b></p>
+    <form method="post" th:action="@{/_private/admin/review-field-edit.html}" th:object="${field}">
+        <input type="hidden" th:field="*{id}">
+        <input type="hidden" th:field="*{reviewType}">
+
+        <label for="label-input">Label:</label>
+        <input id="label-input" type="text" th:field="*{label}" placeholder="Artist">
+        <br>
+        <label for="key-input">Key:</label>
+        <input id="key-input" type="text" th:field="*{key}" placeholder="artist">
+        (generated from the label if empty; renaming keeps all stored values)
+        <br>
+        <label for="type-select">Type:</label>
+        <select id="type-select" th:field="*{fieldType}">
+            <option th:each="t : ${fieldTypes}" th:value="${t}" th:text="${t}"></option>
+        </select>
+        <span th:if="${hasValues}">(reviews already use this field, so the type cannot be changed)</span>
+        <br>
+        <span data-for-type="NUMBER RATING">
+            <label for="min-input">Minimum:</label>
+            <input id="min-input" type="number" step="any" th:field="*{minValue}">
+            <label for="max-input">Maximum:</label>
+            <input id="max-input" type="number" step="any" th:field="*{maxValue}">
+            (ratings default to 0 - 10)
+            <br>
+        </span>
+        <span data-for-type="CHOICE">
+            <label for="choices-input">Choices (one per line):</label><br>
+            <textarea id="choices-input" cols="40" rows="6" th:field="*{choices}"></textarea>
+            <br>
+        </span>
+        <br>
+        <label for="required-input">Required:</label>
+        <input id="required-input" type="checkbox" th:field="*{required}">
+        <br>
+        <label for="list-input">Show in lists (index, category and review pages):</label>
+        <input id="list-input" type="checkbox" th:field="*{showInList}">
+        <br>
+        <label for="filter-input">Filterable (values link to all reviews with the same value):</label>
+        <input id="filter-input" type="checkbox" th:field="*{filterable}">
+        <br>
+        <label for="active-input">Active (uncheck to archive; stored values are kept):</label>
+        <input id="active-input" type="checkbox" th:field="*{active}">
+        <br><br>
+        <button type="submit">Save</button>
+    </form>
+
+    <th:block th:if="${field.id != null}">
+        <hr>
+        <form method="post" th:action="@{/_private/admin/review-field-delete.html}"
+              onsubmit="return confirm('Delete this field and every value stored for it? Archiving keeps the values.');">
+            <input type="hidden" name="id" th:value="${field.id}">
+            <button type="submit" style="color:red">Delete field</button>
+        </form>
+    </th:block>
+
+    <script>
+        (function () {
+            var select = document.getElementById('type-select');
+            function update() {
+                document.querySelectorAll('[data-for-type]').forEach(function (el) {
+                    var types = el.getAttribute('data-for-type').split(' ');
+                    el.style.display = types.indexOf(select.value) >= 0 ? '' : 'none';
+                });
+            }
+            select.addEventListener('change', update);
+            update();
+        })();
+    </script>
+</body>
+</html>

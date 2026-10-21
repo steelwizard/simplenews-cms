@@ -1,4 +1,15 @@
 <div th:fragment="header-navigation">
-    [ <a th:href="@{/news/index.html}">Home</a> | <a th:href="@{/news/category/news.html}">News</a> ]
+    <ul class="menu-header" th:if="${headerMenu != null}">
+        <li th:each="item : ${headerMenu}">
+            <a th:replace="~{fragment/menu :: link(${item})}"></a>
+            <span th:if="${item.href == null}">[[${item.label}]]</span>
+            <ul th:if="${!item.children.isEmpty()}" class="menu-submenu">
+                <li th:each="child : ${item.children}">
+                    <a th:replace="~{fragment/menu :: link(${child})}"></a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <span th:if="${headerMenu == null}">[ <a th:href="@{/news/index.html}">Home</a> ]</span>
     <hr>
 </div>

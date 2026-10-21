@@ -46,5 +46,7 @@ public interface ICategoryDto {
 	void setMetaKeywords(String metaKeywords);
 	String getMetaDescription();
 	void setMetaDescription(String metaDescription);
+	Long getReviewType();
+	void setReviewType(Long reviewType);
 
 }

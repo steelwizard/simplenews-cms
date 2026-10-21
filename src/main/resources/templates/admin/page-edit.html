@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
+</head>
+<body>
+
+    [ <a th:href="@{/_private/admin/page-overview.html}">Back</a> ]
+    <hr>
+    <p th:if="${error}"><b>[[${error}]]</b></p>
+    <p th:if="${saved}">Saved.</p>
+    <form th:action="@{${action}}" th:object="${page}" method="post">
+        Title: <input type="text" th:field="*{title}"><br>
+        Key: <input type="text" th:field="*{key}">
+        <span th:if="${page.key != null and page.key.matches('[a-z0-9-]+')}">
+            <a th:href="@{/pages/{key}(key=${page.key})}">/pages/[[${page.key}]]</a>
+        </span>
+        <br>
+        Visible: <input type="checkbox" th:field="*{visible}"><br>
+        <textarea cols="80" rows="30" th:field="*{content}"></textarea>
+        <br>
+        Meta-Keywords: <input type="text" th:field="*{metaKeywords}"><br>
+        Meta-Description: <input type="text" th:field="*{metaDescription}">
+        <br>
+        <button th:formaction="@{${action}+'?action=0'}">Save</button>
+        &nbsp;|&nbsp;
+        <button th:formaction="@{${action}+'?action=1'}">Preview</button>
+        <span th:if="${page.id != null}">
+            &nbsp;|&nbsp;
+            <button th:formaction="@{${action}+'?action=2'}">Delete</button>
+        </span>
+        <input type="hidden" name="id" th:if="${page.id != null}" th:value="${page.id}"/>
+    </form>
+
+    <hr>
+
+    <div class="news-article">
+        <h3>[[${page.title}]]</h3>
+        <div class="article-info">[[${page.created}]] &nbsp; Author: [[${page.creator}]]</div>
+        <div class="article-content" th:utext="${previewContent}"></div>
+    </div>
+
+</body>
+</html>

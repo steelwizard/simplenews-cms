@@ -71,7 +71,16 @@ It has the following sections:
 
 * **Posts:** create and edit posts
 
-* **Categories:** Manage your categories and assign them to users
+* **Pages:** create static pages, published at `/pages/<key>` (editors and admins)
+
+* **Navigation:** arrange the header and sidebar menus with links to pages, categories,
+  review lists, the category tree or any address (admins)
+
+* **Categories:** Manage your categories and assign them to users. A category of type `REVIEW`
+  uses a review type, and its posts get that review type's extra fields.
+
+* **Reviews:** define review types (e.g. "Music album", "Game") and their adjustable fields.
+  Reviews of a type are listed at `/reviews/<key>.html`, optionally sorted by rating (admins)
 
 * **Users:** Manage user accounts
 

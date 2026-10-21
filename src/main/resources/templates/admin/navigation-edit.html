@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
+</head>
+<body>
+    [ <a th:href="@{/_private/admin/navigation-overview.html}">Back</a> ]
+    <hr>
+    <h3>[[${title}]]</h3>
+    <p th:if="${error}"><b>[[${error}]]</b></p>
+    <form method="post" th:action="@{/_private/admin/navigation-edit.html}" th:object="${item}">
+        <input type="hidden" th:field="*{id}">
+
+        <label for="menu-select">Menu:</label>
+        <select id="menu-select" th:field="*{menu}">
+            <option th:each="m : ${menus}" th:value="${m}" th:text="${m}"></option>
+        </select>
+        <br>
+        <label for="parent-select">Submenu of:</label>
+        <select id="parent-select" th:field="*{parent}">
+            <option th:value="${null}">--- top level ---</option>
+            <option th:each="p : ${parents}" th:value="${p.id}"
+                    th:text="${'[' + p.menu + '] ' + (p.label != null ? p.label : p.type + ' #' + p.id)}"></option>
+        </select>
+        <br><br>
+
+        <label for="type-select">Links to:</label>
+        <select id="type-select" th:field="*{type}">
+            <option value="PAGE">Static page</option>
+            <option value="CATEGORY">Category</option>
+            <option value="REVIEW_INDEX">Review list</option>
+            <option value="NEWS_INDEX">Latest news</option>
+            <option value="CATEGORY_TREE">Category tree (sidebar only)</option>
+            <option value="URL">Address</option>
+        </select>
+        <br>
+        <span data-for-type="PAGE">
+            <label for="page-select">Page:</label>
+            <select id="page-select" th:field="*{pageId}">
+                <option th:value="${null}">---</option>
+                <option th:each="p : ${pages}" th:value="${p.id}" th:text="${p.title + ' (/pages/' + p.key + ')'}"></option>
+            </select>
+            <br>
+        </span>
+        <span data-for-type="CATEGORY">
+            <label for="category-select">Category:</label>
+            <select id="category-select" th:field="*{categoryId}">
+                <option th:value="${null}">---</option>
+                <option th:each="c : ${categoryList}" th:value="${c.id}" th:text="${c.name}"></option>
+            </select>
+            <br>
+        </span>
+        <span data-for-type="REVIEW_INDEX">
+            <label for="review-type-select">Review type:</label>
+            <select id="review-type-select" th:field="*{reviewTypeId}">
+                <option th:value="${null}">---</option>
+                <option th:each="rt : ${reviewTypes}" th:value="${rt.id}" th:text="${rt.title}"></option>
+            </select>
+            <br>
+        </span>
+        <span data-for-type="URL">
+            <label for="url-input">Address:</label>
+            <input id="url-input" type="text" size="60" th:field="*{url}" placeholder="/news/index.html or https://example.com">
+            <br>
+        </span>
+        <br>
+
+        <label for="label-input">Label:</label>
+        <input id="label-input" type="text" th:field="*{label}">
+        (leave empty to use the page, category or review type title)
+        <br>
+        <label for="visible-input">Visible:</label>
+        <input id="visible-input" type="checkbox" th:field="*{visible}">
+        <br>
+        <label for="newtab-input">Open in new tab:</label>
+        <input id="newtab-input" type="checkbox" th:field="*{newTab}">
+        <br><br>
+        <button type="submit">Save</button>
+    </form>
+
+    <script>
+        (function () {
+            var select = document.getElementById('type-select');
+            function update() {
+                document.querySelectorAll('[data-for-type]').forEach(function (el) {
+                    el.style.display = el.getAttribute('data-for-type') === select.value ? '' : 'none';
+                });
+            }
+            select.addEventListener('change', update);
+            update();
+        })();
+    </script>
+</body>
+</html>

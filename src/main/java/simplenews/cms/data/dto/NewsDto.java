@@ -36,7 +36,7 @@ public class NewsDto implements INewsDto {
 		this.created = news.getCreated().toLocalDateTime();
 		this.visible = news.getVisible();
 		this.metaKeywords = news.getMetaKeywords();
-		this.metaKeywords = news.getMetaDescription();
+		this.metaDescription = news.getMetaDescription();
 		this.lastModifiedBy = news.getLastModifiedBy();
 	}
 

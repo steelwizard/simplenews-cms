@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
+</head>
+<body>
+    <section th:insert="~{@{admin/admin-navigation} :: admin-navigation}"></section>
+
+    <p th:if="${message}"><b>[[${message}]]</b></p>
+    <form method="post" th:action="@{/_private/admin/navigation-settings.html}" style="display:inline">
+        <label for="auto-select">Add new categories automatically to:</label>
+        <select id="auto-select" name="autoCategories">
+            <option value="HEADER" th:selected="${autoCategoryMenu != null and autoCategoryMenu.name() == 'HEADER'}">Header menu</option>
+            <option value="SIDEBAR" th:selected="${autoCategoryMenu != null and autoCategoryMenu.name() == 'SIDEBAR'}">Sidebar menu</option>
+            <option value="OFF" th:selected="${autoCategoryMenu == null}">Nowhere (off)</option>
+        </select>
+        <label for="auto-page-select">New pages to:</label>
+        <select id="auto-page-select" name="autoPages">
+            <option value="HEADER" th:selected="${autoPageMenu != null and autoPageMenu.name() == 'HEADER'}">Header menu</option>
+            <option value="SIDEBAR" th:selected="${autoPageMenu != null and autoPageMenu.name() == 'SIDEBAR'}">Sidebar menu</option>
+            <option value="OFF" th:selected="${autoPageMenu == null}">Nowhere (off)</option>
+        </select>
+        <button type="submit">Save</button>
+    </form>
+    &nbsp;|&nbsp;
+    <form method="post" th:action="@{/_private/admin/navigation-sync.html}" style="display:inline"
+          onsubmit="return confirm('Add missing categories and pages, move auto-added entries to match the category tree and delete entries whose target no longer exists?');">
+        <button type="submit">Sync now</button>
+    </form>
+    <p>
+        <small>
+            Sync adds every category and page that has no entry in its chosen menu (pages on the top level,
+            hidden pages stay out of the public menu until published), re-nests entries marked "auto" when
+            their category moved, and removes entries whose page, category or review type was deleted.
+            Editing an "auto" entry turns it into a manual one that sync leaves alone. To keep a category or
+            page out of the menu, hide its entry instead of deleting it, or sync will add it again.
+            The sidebar already shows the full category tree by default.
+        </small>
+    </p>
+
+    <th:block th:each="menu : ${menus}">
+        <h3>[[${#strings.capitalize(#strings.toLowerCase(menu.key.name()))}]] menu</h3>
+        [ <a th:href="@{/_private/admin/navigation-create.html(menu=${menu.key})}">New entry</a> ]
+        <br><br>
+        <table border="1">
+            <tr>
+                <th>Label</th>
+                <th>Links to</th>
+                <th>Visible</th>
+                <th>Order</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+            <tr th:if="${menu.value.isEmpty()}">
+                <td colspan="6">No entries.</td>
+            </tr>
+            <tr th:each="row : ${menu.value}">
+                <td>
+                    <span th:if="${row.depth > 0}">&nbsp;&nbsp;&nbsp;&nbsp;&#8627;&nbsp;</span>
+                    <b th:if="${row.depth == 0}">[[${row.label}]]</b>
+                    <span th:if="${row.depth > 0}">[[${row.label}]]</span>
+                    <small th:if="${row.item.autoManaged}">(auto)</small>
+                </td>
+                <td>
+                    [[${row.target}]]
+                    <b th:if="${row.broken}" style="color:red">(broken)</b>
+                </td>
+                <td><input type="checkbox" th:checked="${row.item.visible}" disabled></td>
+                <td>
+                    <form method="post" th:action="@{/_private/admin/navigation-move.html}" style="display:inline">
+                        <input type="hidden" name="id" th:value="${row.item.id}">
+                        <button name="dir" value="up" th:disabled="${row.first}">&uarr;</button>
+                        <button name="dir" value="down" th:disabled="${row.last}">&darr;</button>
+                    </form>
+                </td>
+                <td><a th:href="@{/_private/admin/navigation-edit.html(id=${row.item.id})}">Edit</a></td>
+                <td>
+                    <form method="post" th:action="@{/_private/admin/navigation-delete.html}" style="display:inline"
+                          onsubmit="return confirm('Delete this entry and its submenu entries?');">
+                        <input type="hidden" name="id" th:value="${row.item.id}">
+                        <button type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        </table>
+        <br>
+    </th:block>
+
+</body>
+</html>

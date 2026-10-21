@@ -15,6 +15,7 @@ import simplenews.cms.data.api.ICategoryDto;
 import simplenews.cms.data.dto.INewsDto;
 import simplenews.cms.service.ICategoryService;
 import simplenews.cms.service.INewsService;
+import simplenews.cms.service.IReviewService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import simplenews.cms.service.ISiteSettingService;
@@ -35,6 +36,8 @@ public class NewsController {
 	private ICategoryService categoryService;
 	@Autowired
 	ISiteSettingService siteSettingService;
+	@Autowired
+	IReviewService reviewService;
 
 	@GetMapping("/")
 	public RedirectView getDefaultPage() {
@@ -63,6 +66,7 @@ public class NewsController {
 		model.addAttribute("categories", categoryDtos);
 		model.addAttribute("title", siteSettingService.getSiteTitle());
 		model.addAttribute("newslist", newslist);
+		model.addAttribute("reviewValues", reviewService.getDisplayValues(newslist, true));
 		model.addAttribute("hasNextPage", hasNextPage);
 		model.addAttribute("page", page);
 
@@ -98,6 +102,7 @@ public class NewsController {
 		model.addAttribute("categories", categoryDtos);
 		model.addAttribute("title", title);
 		model.addAttribute("newslist", newslist);
+		model.addAttribute("reviewValues", reviewService.getDisplayValues(newslist, true));
 		model.addAttribute("hasNextPage", hasNextPage);
 		model.addAttribute("page", page);
 
@@ -140,6 +145,7 @@ public class NewsController {
 		model.addAttribute("categories", categoryDtos);
 		model.addAttribute("title", newslist.get(0).getTitle());
 		model.addAttribute("newslist", newslist);
+		model.addAttribute("reviewValues", reviewService.getDisplayValues(newslist, false));
 		model.addAttribute("page", -1);
 
 		return "news/article.html";

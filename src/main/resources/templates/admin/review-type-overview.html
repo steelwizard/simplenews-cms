@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
+</head>
+<body>
+    <section th:insert="~{@{admin/admin-navigation} :: admin-navigation}"></section>
+
+    <p th:if="${error}"><b>[[${error}]]</b></p>
+    [ <a th:href="@{/_private/admin/review-type-create.html}">New review type</a> ]
+    <br><br>
+    <table border="1">
+        <tr>
+            <th>Title</th>
+            <th>Key</th>
+            <th>Public list</th>
+            <th>Used by categories</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        <tr th:if="${types.isEmpty()}">
+            <td colspan="6">No review types yet.</td>
+        </tr>
+        <tr th:each="entry : ${types}">
+            <td><b>[[${entry.key.title}]]</b></td>
+            <td>[[${entry.key.key}]]</td>
+            <td><a th:href="@{/reviews/{key}.html(key=${entry.key.key})}">/reviews/[[${entry.key.key}]].html</a></td>
+            <td>[[${entry.value.isEmpty() ? '-' : #strings.listJoin(entry.value, ', ')}]]</td>
+            <td><a th:href="@{/_private/admin/review-type-edit.html(id=${entry.key.id})}">Edit</a></td>
+            <td>
+                <form th:if="${entry.value.isEmpty()}" method="post" th:action="@{/_private/admin/review-type-delete.html}"
+                      style="display:inline"
+                      onsubmit="return confirm('Delete this review type, its fields and all stored review values?');">
+                    <input type="hidden" name="id" th:value="${entry.key.id}">
+                    <button type="submit">Delete</button>
+                </form>
+                <span th:unless="${entry.value.isEmpty()}">in use</span>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

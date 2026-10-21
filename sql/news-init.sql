@@ -144,3 +144,94 @@ INSERT INTO site_setting (key, value)
 	('site.meta.keywords', 'blog, news'),
 	('site.meta.description','Welcome to my website!'),
 	('site.title','My Site');
+
+-- public.page definition
+-- Static pages, published at /pages/<key>
+
+CREATE TABLE public.page (
+	id bigserial NOT NULL,
+	"key" varchar(80) NOT NULL,
+	title varchar(200) NOT NULL,
+	"content" text NULL,
+	creator varchar NULL,
+	last_modified_by varchar NULL,
+	last_modified timestamp NOT NULL DEFAULT now(),
+	created timestamp NOT NULL DEFAULT now(),
+	visible bool NULL DEFAULT true,
+	meta_keywords varchar NULL,
+	meta_description varchar NULL,
+	CONSTRAINT page_pk PRIMARY KEY (id),
+	CONSTRAINT page_key_un UNIQUE (key)
+);
+
+-- public.review_type definition
+-- A reusable set of review fields, e.g. "Music album" or "Game". Listed at /reviews/<key>.html
+
+CREATE TABLE public.review_type (
+	id bigserial NOT NULL,
+	"key" varchar(50) NOT NULL,
+	title varchar(100) NOT NULL,
+	creator varchar NULL,
+	created timestamp NULL,
+	last_modified timestamp NULL,
+	CONSTRAINT review_type_pk PRIMARY KEY (id),
+	CONSTRAINT review_type_key_un UNIQUE (key)
+);
+
+ALTER TABLE public.category
+	ADD COLUMN review_type bigint NULL REFERENCES public.review_type(id);
+
+-- public.review_field definition
+
+CREATE TABLE public.review_field (
+	id bigserial NOT NULL,
+	review_type bigint NOT NULL REFERENCES public.review_type(id) ON DELETE CASCADE,
+	"key" varchar(50) NOT NULL,
+	label varchar(100) NOT NULL,
+	field_type varchar(20) NOT NULL,       -- TEXT, NUMBER, RATING, DATE, URL, CHOICE
+	min_value numeric NULL,
+	max_value numeric NULL,
+	choices text NULL,                     -- one choice per line
+	required bool NOT NULL DEFAULT false,
+	"position" int NOT NULL DEFAULT 0,
+	show_in_list bool NOT NULL DEFAULT false,
+	filterable bool NOT NULL DEFAULT false,
+	active bool NOT NULL DEFAULT true,
+	CONSTRAINT review_field_pk PRIMARY KEY (id),
+	CONSTRAINT review_field_key_un UNIQUE (review_type, key)
+);
+
+-- public.news_field_value definition
+
+CREATE TABLE public.news_field_value (
+	news_id bigint NOT NULL REFERENCES public.news(id) ON DELETE CASCADE,
+	field_id bigint NOT NULL REFERENCES public.review_field(id) ON DELETE CASCADE,
+	value_text varchar(1000) NULL,
+	value_number numeric NULL,
+	CONSTRAINT news_field_value_pk PRIMARY KEY (news_id, field_id)
+);
+CREATE INDEX news_field_value_number_idx ON public.news_field_value (field_id, value_number);
+CREATE INDEX news_field_value_text_idx ON public.news_field_value (field_id, lower(value_text));
+
+-- public.navigation_item definition
+-- Default entries are created by the application on first start.
+
+CREATE TABLE public.navigation_item (
+	id bigserial NOT NULL,
+	menu varchar(20) NOT NULL,             -- HEADER, SIDEBAR
+	parent bigint NULL REFERENCES public.navigation_item(id) ON DELETE CASCADE,
+	"position" int NOT NULL DEFAULT 0,
+	label varchar(100) NULL,
+	"type" varchar(20) NOT NULL,           -- PAGE, CATEGORY, CATEGORY_TREE, NEWS_INDEX, REVIEW_INDEX, URL
+	page_id bigint NULL REFERENCES public.page(id) ON DELETE CASCADE,
+	category_id bigint NULL REFERENCES public.category(id) ON DELETE CASCADE,
+	review_type_id bigint NULL REFERENCES public.review_type(id) ON DELETE CASCADE,
+	url varchar(500) NULL,
+	visible bool NOT NULL DEFAULT true,
+	new_tab bool NOT NULL DEFAULT false,
+	auto_managed bool NOT NULL DEFAULT false, -- created by the category sync, may be moved by it
+	creator varchar NULL,
+	created timestamp NULL,
+	last_modified timestamp NULL,
+	CONSTRAINT navigation_item_pk PRIMARY KEY (id)
+);

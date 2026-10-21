@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}"></title>
+    <link th:href="@{/css/style-dark.css}" rel="stylesheet" />
+</head>
+<body>
+    <form method="post" th:action="@{/_private/admin/page-delete.html(id=${page.id}, del=true)}" th:object="${page}">
+        <h2>Delete Page</h2>
+        <br>
+        Do you really want to delete the page <b>[[${page.title}]]</b>?<br>
+        [ <button type="submit">Yes</button>&nbsp;|&nbsp;<a th:href="@{/_private/admin/page-overview.html}"><button type="button">No</button></a> ]
+    </form>
+    <hr>
+
+    <div class="news-article">
+        <h3>[[${page.title}]]</h3>
+        <div class="article-info">[[${page.created}]] &nbsp; Author: [[${page.creator}]]</div>
+        <div class="article-content" th:utext="${page.content}"></div>
+    </div>
+</body>
+</html>
