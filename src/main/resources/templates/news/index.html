@@ -12,7 +12,7 @@
     <body class="flex">
         <div class="header">
             <div th:insert="~{@{fragment/header-navigation}::header-navigation}" class="header-navigation"></div>
-            <a th:href="@{/news/index.html}">
+            <a th:href="@{/index.html}">
                 <h1>News</h1>
             </a>
             <h2 th:text="${title}"></h2>
@@ -25,7 +25,7 @@
 
                     <div class="article-info">
                         <span>
-                          <a class="headline" th:href="@{/news/{id}-{key}.html(id=${post.id}, key=${post.key})}">
+                          <a class="headline" th:href="@{/{id}-{key}.html(id=${post.id}, key=${post.key})}">
                             [[${post.title}]]
                           </a>
                         </span>&nbsp;

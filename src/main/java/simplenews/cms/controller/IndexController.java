@@ -12,7 +12,7 @@ public class IndexController {
 
 	@GetMapping
 	public RedirectView homePage() {
-		RedirectView redirect = new RedirectView("/news/index.html"); //Currently news is the homepage
+		RedirectView redirect = new RedirectView("/index.html");
 		redirect.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
 		return redirect;
 	}

@@ -1,7 +1,7 @@
 <div th:fragment="category">
     <ul>
         <li th:each="cat : ${maincategories}">
-            <a th:href="@{/news/category/{name}.html(name=${cat.name})}">
+            <a th:href="@{/category/{name}.html(name=${cat.name})}">
                 [[${cat.getTitle}]]
             </a>
             <div th:insert="~{@{fragment/category-fragment.html} :: category}" th:with="maincategories=${cat.getChildren()}"></div>

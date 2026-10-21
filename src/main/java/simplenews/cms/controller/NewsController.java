@@ -8,7 +8,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.view.RedirectView;
 import simplenews.cms.data.api.ICategoryDto;
@@ -25,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Controller
-@RequestMapping("news")
 public class NewsController {
 
 	public static final int RESULT_LIMIT = 10;
@@ -39,11 +37,6 @@ public class NewsController {
 	@Autowired
 	IReviewService reviewService;
 
-	@GetMapping("/")
-	public RedirectView getDefaultPage() {
-		return redirectToIndex();
-	}
-
 	@GetMapping("index.html")
 	public String renderLatest(Model model, @RequestParam(name = "p", required = false) Integer p, HttpServletRequest req) {
 		int page = p != null ? p : 0;
@@ -56,7 +49,7 @@ public class NewsController {
 		List<ICategoryDto> categoryDtos = categoryService.getRootCategories(true);
 
 		StringBuilder canonicalLink = new StringBuilder(req.getHeader("host"));
-		canonicalLink.append("/news/index.html");
+		canonicalLink.append("/index.html");
 		if (page > 1) canonicalLink.append("?p="+page);
 
 		model.addAttribute("canonicalLink", canonicalLink.toString());
@@ -118,7 +111,7 @@ public class NewsController {
 			return null;
 		}
 
-		return new RedirectView("/news/"+news.getId()+"-"+news.getKey()+".html");
+		return new RedirectView("/"+news.getId()+"-"+news.getKey()+".html");
 	}
 
 	@GetMapping("{id:[0-9]+}-{key}.html")
@@ -132,14 +125,14 @@ public class NewsController {
 			return null;
 		}
 		if (!news.getKey().equals(key)) {
-			res.sendRedirect("/news/"+news.getId()+"-"+news.getKey()+".html");
+			res.sendRedirect("/"+news.getId()+"-"+news.getKey()+".html");
 			return null;
 		}
 		newslist.add(news);
 		List<ICategoryDto> categoryDtos = categoryService.getRootCategories(true);
 
-		model.addAttribute("canonicalLink", req.getHeader("host")+"/news/"+news.getId()+"-"+news.getKey()+".html");
-		model.addAttribute("permaLink", req.getHeader("host")+"/news/"+news.getId());
+		model.addAttribute("canonicalLink", req.getHeader("host")+"/"+news.getId()+"-"+news.getKey()+".html");
+		model.addAttribute("permaLink", req.getHeader("host")+"/"+news.getId());
 		model.addAttribute("metaKeywords", news.getMetaKeywords());
 		model.addAttribute("metaDescription", news.getMetaDescription());
 		model.addAttribute("categories", categoryDtos);
@@ -202,7 +195,7 @@ public class NewsController {
 			return null;
 		}
 		if (!news.getKey().equals(key)) {
-			res.sendRedirect("/news/"+news.getId()+"-"+news.getKey()+".json");
+			res.sendRedirect("/"+news.getId()+"-"+news.getKey()+".json");
 			return null;
 		}
 		return new ResponseEntity<>(news, HttpStatus.OK);
@@ -210,12 +203,5 @@ public class NewsController {
 	private INewsDto getVisibleNews(Long id) {
 		INewsDto news = newsService.getNewsById(id);
 		return news != null && Boolean.TRUE.equals(news.getVisible()) ? news : null;
-	}
-
-	@GetMapping
-	public RedirectView redirectToIndex() {
-		RedirectView redirect = new RedirectView("/news/index.html");
-		redirect.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
-		return redirect;
 	}
 }

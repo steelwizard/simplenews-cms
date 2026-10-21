@@ -34,7 +34,7 @@
                 <div th:each="post : ${newslist}" class="news-article">
                     <div class="article-info">
                         <span>
-                          <a class="headline" th:href="@{/news/{id}-{key}.html(id=${post.id}, key=${post.key})}">
+                          <a class="headline" th:href="@{/{id}-{key}.html(id=${post.id}, key=${post.key})}">
                             [[${post.title}]]
                           </a>
                         </span>&nbsp;

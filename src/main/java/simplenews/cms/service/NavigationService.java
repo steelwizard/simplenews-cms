@@ -226,12 +226,6 @@ public class NavigationService implements INavigationService {
 			Timestamp now = new Timestamp(System.currentTimeMillis());
 			NavigationItem home = seedItem(NavigationMenuEnum.HEADER, 0, "Home", NavigationTypeEnum.NEWS_INDEX, now);
 			navigationRepository.save(home);
-			Category news = categoryService.getCategoryByName("news");
-			if (news != null) {
-				NavigationItem newsItem = seedItem(NavigationMenuEnum.HEADER, 1, "News", NavigationTypeEnum.CATEGORY, now);
-				newsItem.setCategoryId(news.getId());
-				navigationRepository.save(newsItem);
-			}
 			navigationRepository.save(seedItem(NavigationMenuEnum.SIDEBAR, 0, null, NavigationTypeEnum.CATEGORY_TREE, now));
 			LOG.info("Created default navigation.");
 		}
@@ -378,6 +372,10 @@ public class NavigationService implements INavigationService {
 	}
 
 	private boolean addCategoryEntry(Category category, NavigationMenuEnum menu, Map<Long, Category> categories) {
+		// Home already opens the latest posts, so the main news category is not repeated in the header.
+		if (menu == NavigationMenuEnum.HEADER && "news".equals(category.getName())) {
+			return false;
+		}
 		if (navigationRepository.existsByMenuAndTypeAndCategoryId(menu, NavigationTypeEnum.CATEGORY, category.getId())) {
 			return false;
 		}
@@ -523,7 +521,7 @@ public class NavigationService implements INavigationService {
 				Category category = item.getCategoryId() == null ? null : targets.categories.get(item.getCategoryId());
 				if (category == null) return Resolved.broken(custom, "Category (deleted)");
 				String title = category.getTitle() != null ? category.getTitle() : category.getName();
-				String href = "/news/category/" + UriUtils.encodePathSegment(category.getName(), StandardCharsets.UTF_8) + ".html";
+				String href = "/category/" + UriUtils.encodePathSegment(category.getName(), StandardCharsets.UTF_8) + ".html";
 				return new Resolved(orDefault(custom, title), href, "Category: " + category.getName(),
 						false, !Boolean.TRUE.equals(category.getVisible()));
 			}
@@ -534,7 +532,7 @@ public class NavigationService implements INavigationService {
 						"Review list: " + type.getTitle(), false, false);
 			}
 			case NEWS_INDEX -> {
-				return new Resolved(orDefault(custom, "News"), "/news/index.html", "Latest news", false, false);
+				return new Resolved(orDefault(custom, "News"), "/index.html", "Latest news", false, false);
 			}
 			case CATEGORY_TREE -> {
 				return new Resolved(custom, null, "Category tree", false, false);
