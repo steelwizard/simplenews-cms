@@ -75,7 +75,7 @@ public class ProfileController {
 		model.addAttribute("user", userEditDto);
 		model.addAttribute("error", errorStrb.toString());
 		model.addAttribute("success", successStrb.toString());
-		model.addAttribute("action", "/_private/admin/user-edit.html");
+		model.addAttribute("action", "/_private/admin/profile.html");
 		model.addAttribute("isNewUser", isNewUser);
 
 		return "admin/profile.html";
