@@ -19,7 +19,7 @@
         Title: <input type="text" name="title" th:value="${post.title}"><br>
         Key: <input type="text" name="key" th:value="${post.key}"><br>
         Visible: <input type="checkbox" name="visible" th:checked="${post.visible}"><br>
-        <textarea cols="80" rows="30" name="content">[[${post.content}]]</textarea>
+        <textarea class="html-editor" cols="80" rows="30" name="content">[[${post.content}]]</textarea>
         <br>
         Category: <select id="category-select" th:field="*{category}">
             <option th:each="current : ${categories}"
@@ -85,6 +85,8 @@
         <ul th:replace="~{fragment/download-files :: files(${attachments})}"></ul>
     </div>
 
+    <script th:src="@{/js/tinymce/tinymce.min.js}"></script>
+    <script th:src="@{/js/editor.js}" th:attr="data-base=@{/js/tinymce}"></script>
     <script>
         (function () {
             var select = document.getElementById('category-select');

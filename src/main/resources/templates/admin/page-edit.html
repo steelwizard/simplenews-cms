@@ -19,7 +19,7 @@
         </span>
         <br>
         Visible: <input type="checkbox" th:field="*{visible}"><br>
-        <textarea cols="80" rows="30" th:field="*{content}"></textarea>
+        <textarea class="html-editor" cols="80" rows="30" th:field="*{content}"></textarea>
         <br>
         Meta-Keywords: <input type="text" th:field="*{metaKeywords}"><br>
         Meta-Description: <input type="text" th:field="*{metaDescription}">
@@ -42,5 +42,7 @@
         <div class="article-content" th:utext="${previewContent}"></div>
     </div>
 
+    <script th:src="@{/js/tinymce/tinymce.min.js}"></script>
+    <script th:src="@{/js/editor.js}" th:attr="data-base=@{/js/tinymce}"></script>
 </body>
 </html>
