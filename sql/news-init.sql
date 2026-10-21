@@ -213,6 +213,18 @@ CREATE TABLE public.news_field_value (
 CREATE INDEX news_field_value_number_idx ON public.news_field_value (field_id, value_number);
 CREATE INDEX news_field_value_text_idx ON public.news_field_value (field_id, lower(value_text));
 
+-- public.news_file definition
+-- Files attached to DOWNLOAD category posts.
+
+CREATE TABLE public.news_file (
+	id bigserial NOT NULL,
+	news_id bigint NOT NULL REFERENCES public.news(id) ON DELETE CASCADE,
+	file_id bigint NOT NULL REFERENCES public.upload_file(id) ON DELETE CASCADE,
+	"position" int NOT NULL DEFAULT 0,
+	CONSTRAINT news_file_pk PRIMARY KEY (id),
+	CONSTRAINT news_file_un UNIQUE (news_id, file_id)
+);
+
 -- public.navigation_item definition
 -- Default entries are created by the application on first start.
 
@@ -235,3 +247,87 @@ CREATE TABLE public.navigation_item (
 	last_modified timestamp NULL,
 	CONSTRAINT navigation_item_pk PRIMARY KEY (id)
 );
+
+-- Example content (also created on existing databases by ExampleContentSeeder)
+
+INSERT INTO public.review_type (key, title, creator, created, last_modified)
+VALUES
+	('album', 'Music album', 'admin', now(), now()),
+	('game', 'Game', 'admin', now(), now());
+
+INSERT INTO public.review_field (review_type, key, label, field_type, min_value, max_value, choices, required, position, show_in_list, filterable, active)
+SELECT id, 'artist', 'Artist', 'TEXT', NULL, NULL, NULL, true, 0, true, true, true FROM public.review_type WHERE key = 'album';
+INSERT INTO public.review_field (review_type, key, label, field_type, min_value, max_value, choices, required, position, show_in_list, filterable, active)
+SELECT id, 'year', 'Year', 'NUMBER', 1900, 2100, NULL, false, 1, true, false, true FROM public.review_type WHERE key = 'album';
+INSERT INTO public.review_field (review_type, key, label, field_type, min_value, max_value, choices, required, position, show_in_list, filterable, active)
+SELECT id, 'genre', 'Genre', 'CHOICE', NULL, NULL, E'Jazz\nRock\nPop\nElectronic\nHip-Hop\nOther', false, 2, true, true, true FROM public.review_type WHERE key = 'album';
+INSERT INTO public.review_field (review_type, key, label, field_type, min_value, max_value, choices, required, position, show_in_list, filterable, active)
+SELECT id, 'rating', 'Rating', 'RATING', 0, 10, NULL, true, 3, true, false, true FROM public.review_type WHERE key = 'album';
+INSERT INTO public.review_field (review_type, key, label, field_type, min_value, max_value, choices, required, position, show_in_list, filterable, active)
+SELECT id, 'replay', 'Replay value', 'PERCENT', 0, 100, NULL, false, 4, true, false, true FROM public.review_type WHERE key = 'album';
+
+INSERT INTO public.review_field (review_type, key, label, field_type, min_value, max_value, choices, required, position, show_in_list, filterable, active)
+SELECT id, 'publisher', 'Publisher', 'TEXT', NULL, NULL, NULL, true, 0, true, true, true FROM public.review_type WHERE key = 'game';
+INSERT INTO public.review_field (review_type, key, label, field_type, min_value, max_value, choices, required, position, show_in_list, filterable, active)
+SELECT id, 'platform', 'Platform', 'CHOICE', NULL, NULL, E'PC\nPlayStation\nXbox\nNintendo\nMobile\nOther', false, 1, true, true, true FROM public.review_type WHERE key = 'game';
+INSERT INTO public.review_field (review_type, key, label, field_type, min_value, max_value, choices, required, position, show_in_list, filterable, active)
+SELECT id, 'rating', 'Rating', 'RATING', 0, 10, NULL, true, 2, true, false, true FROM public.review_type WHERE key = 'game';
+INSERT INTO public.review_field (review_type, key, label, field_type, min_value, max_value, choices, required, position, show_in_list, filterable, active)
+SELECT id, 'score', 'Score', 'PERCENT', 0, 100, NULL, false, 3, true, false, true FROM public.review_type WHERE key = 'game';
+
+INSERT INTO public.category (name, title, type, creator, created, last_modified, visible, parent, review_type)
+SELECT 'music', 'Music', 'REVIEW', 'admin', now(), now(), true, NULL, id FROM public.review_type WHERE key = 'album';
+INSERT INTO public.category (name, title, type, creator, created, last_modified, visible, parent, review_type)
+SELECT 'games', 'Games', 'REVIEW', 'admin', now(), now(), true, NULL, id FROM public.review_type WHERE key = 'game';
+INSERT INTO public.category (name, title, type, creator, created, last_modified, visible, parent, review_type)
+VALUES ('downloads', 'Downloads', 'DOWNLOAD', 'admin', now(), now(), true, NULL, NULL);
+
+INSERT INTO public.news (key, title, content, category, creator, last_modified_by, created, last_modified, visible)
+SELECT 'kind-of-blue', 'Kind of Blue',
+	'<p>An example music review. The artist, year, genre and scores sit in the review fields.</p>',
+	c.id, 'admin', 'admin', now(), now(), true
+FROM public.category c WHERE c.name = 'music';
+INSERT INTO public.news (key, title, content, category, creator, last_modified_by, created, last_modified, visible)
+SELECT 'example-game', 'Example Game',
+	'<p>An example game review. Change publisher, platform and scores to match a real title.</p>',
+	c.id, 'admin', 'admin', now(), now(), true
+FROM public.category c WHERE c.name = 'games';
+INSERT INTO public.news (key, title, content, category, creator, last_modified_by, created, last_modified, visible)
+SELECT 'starter-pack', 'Starter pack',
+	'<p>An example download post. Edit it and attach a file (zip, pdf, image or video) from the Files box.</p>',
+	c.id, 'admin', 'admin', now(), now(), true
+FROM public.category c WHERE c.name = 'downloads';
+
+INSERT INTO public.news_field_value (news_id, field_id, value_text, value_number)
+SELECT n.id, f.id, 'Miles Davis', NULL FROM public.news n, public.review_field f, public.review_type t
+	WHERE n.key = 'kind-of-blue' AND t.key = 'album' AND f.review_type = t.id AND f.key = 'artist';
+INSERT INTO public.news_field_value (news_id, field_id, value_text, value_number)
+SELECT n.id, f.id, '1959', 1959 FROM public.news n, public.review_field f, public.review_type t
+	WHERE n.key = 'kind-of-blue' AND t.key = 'album' AND f.review_type = t.id AND f.key = 'year';
+INSERT INTO public.news_field_value (news_id, field_id, value_text, value_number)
+SELECT n.id, f.id, 'Jazz', NULL FROM public.news n, public.review_field f, public.review_type t
+	WHERE n.key = 'kind-of-blue' AND t.key = 'album' AND f.review_type = t.id AND f.key = 'genre';
+INSERT INTO public.news_field_value (news_id, field_id, value_text, value_number)
+SELECT n.id, f.id, '9.5', 9.5 FROM public.news n, public.review_field f, public.review_type t
+	WHERE n.key = 'kind-of-blue' AND t.key = 'album' AND f.review_type = t.id AND f.key = 'rating';
+INSERT INTO public.news_field_value (news_id, field_id, value_text, value_number)
+SELECT n.id, f.id, '92', 92 FROM public.news n, public.review_field f, public.review_type t
+	WHERE n.key = 'kind-of-blue' AND t.key = 'album' AND f.review_type = t.id AND f.key = 'replay';
+
+INSERT INTO public.news_field_value (news_id, field_id, value_text, value_number)
+SELECT n.id, f.id, 'Example Studio', NULL FROM public.news n, public.review_field f, public.review_type t
+	WHERE n.key = 'example-game' AND t.key = 'game' AND f.review_type = t.id AND f.key = 'publisher';
+INSERT INTO public.news_field_value (news_id, field_id, value_text, value_number)
+SELECT n.id, f.id, 'PC', NULL FROM public.news n, public.review_field f, public.review_type t
+	WHERE n.key = 'example-game' AND t.key = 'game' AND f.review_type = t.id AND f.key = 'platform';
+INSERT INTO public.news_field_value (news_id, field_id, value_text, value_number)
+SELECT n.id, f.id, '8', 8 FROM public.news n, public.review_field f, public.review_type t
+	WHERE n.key = 'example-game' AND t.key = 'game' AND f.review_type = t.id AND f.key = 'rating';
+INSERT INTO public.news_field_value (news_id, field_id, value_text, value_number)
+SELECT n.id, f.id, '81', 81 FROM public.news n, public.review_field f, public.review_type t
+	WHERE n.key = 'example-game' AND t.key = 'game' AND f.review_type = t.id AND f.key = 'score';
+
+INSERT INTO public.page (key, title, content, creator, last_modified_by, created, last_modified, visible, meta_description)
+VALUES ('about', 'About us',
+	'<p>This is an example About us page. Edit it under Pages in the admin area. It is published at <code>/pages/about.html</code>.</p>',
+	'admin', 'admin', now(), now(), true, 'Who we are');

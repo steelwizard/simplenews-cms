@@ -15,7 +15,7 @@
             <li th:each="e : ${reviewErrors}">[[${e}]]</li>
         </ul>
     </div>
-    <form th:action="@{${action}}" th:object="${post}" method="POST">
+    <form th:action="@{${action}}" th:object="${post}" method="POST" enctype="multipart/form-data">
         Title: <input type="text" name="title" th:value="${post.title}"><br>
         Key: <input type="text" name="key" th:value="${post.key}"><br>
         Visible: <input type="checkbox" name="visible" th:checked="${post.visible}"><br>
@@ -25,7 +25,7 @@
             <option th:each="current : ${categories}"
                     th:value="${current.name}"
                     th:text="${current.name}"
-                    th:attr="data-review-type=${current.reviewType}">
+                    th:attr="data-review-type=${current.reviewType},data-category-type=${current.type}">
             </option>
         </select>
         <br>
@@ -49,6 +49,18 @@
                 </th:block>
             </fieldset>
         </th:block>
+        <fieldset class="download-editor">
+            <legend>Files (images and video are shown in the post)</legend>
+            <div th:if="${attachments != null and !attachments.isEmpty()}">
+                <label th:each="f : ${attachments}">
+                    <input type="checkbox" name="removeFile" th:value="${f.id}">
+                    Remove
+                    <a th:href="@{${f.url}}">[[${f.filename}]]</a>
+                    <br>
+                </label>
+            </div>
+            <input type="file" name="attachments" multiple>
+        </fieldset>
         Meta-Keywords: <input type="text" name="metaKeywords" th:value="${post.metaKeywords}">
         Meta-Description: <input type="text" name="metaDescription" th:value="${post.metaDescription}">
         <br>
@@ -70,6 +82,7 @@
         <h3>[[${post.title}]]</h3>
         <div class="article-info">[[${post.created}]] &nbsp; Author: [[${post.creator}]]</div>
         <div class="article-content" th:utext="${previewContent}"></div>
+        <ul th:replace="~{fragment/download-files :: files(${attachments})}"></ul>
     </div>
 
     <script>

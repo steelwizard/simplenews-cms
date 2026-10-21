@@ -1,10 +1,13 @@
 package simplenews.cms.data.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import simplenews.cms.data.api.INews;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.StringJoiner;
 
 public class NewsDto implements INewsDto {
@@ -23,6 +26,8 @@ public class NewsDto implements INewsDto {
 	private Boolean visible;
 	private String metaKeywords;
 	private String metaDescription;
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
+	private List<DownloadFileDto> files = new ArrayList<>();
 
 	public NewsDto() {}
 	public NewsDto(INews news) {
@@ -164,6 +169,14 @@ public class NewsDto implements INewsDto {
 
 	public void setMetaDescription(String metaDescription) {
 		this.metaDescription = metaDescription;
+	}
+
+	public List<DownloadFileDto> getFiles() {
+		return files;
+	}
+
+	public void setFiles(List<DownloadFileDto> files) {
+		this.files = files == null ? new ArrayList<>() : files;
 	}
 
 	@Override

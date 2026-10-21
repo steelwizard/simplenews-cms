@@ -11,6 +11,7 @@ import simplenews.cms.data.dto.ReviewFieldDto;
 import simplenews.cms.data.dto.ReviewJsonDto;
 import simplenews.cms.data.dto.ReviewTypeDto;
 import simplenews.cms.data.entity.Category;
+import simplenews.cms.data.entity.News;
 import simplenews.cms.data.entity.NewsFieldValue;
 import simplenews.cms.data.entity.NewsFieldValueId;
 import simplenews.cms.data.entity.ReviewField;
@@ -60,6 +61,8 @@ public class ReviewService implements IReviewService {
 	NavigationItemRepository navigationRepository;
 	@Autowired
 	ICategoryService categoryService;
+	@Autowired
+	INewsFileService newsFileService;
 
 	@Override
 	public List<ReviewType> getReviewTypes() {
@@ -417,10 +420,13 @@ public class ReviewService implements IReviewService {
 		boolean useFilter = filterField != null && filterValue != null && !filterValue.isBlank();
 		long filterId = useFilter ? filterField.getId() : -1L;
 		String value = useFilter ? filterValue.strip() : "";
-		return newsRepository.findReviews(type.getId(), ratingId, filterId, value, byRating && rating != null, limit, offset)
-				.stream()
-				.map(n -> (INewsDto) new NewsDto(n))
-				.toList();
+		List<News> news = newsRepository.findReviews(type.getId(), ratingId, filterId, value, byRating && rating != null, limit, offset);
+		var files = newsFileService.getByNewsIds(news.stream().map(News::getId).toList());
+		return news.stream().map(n -> {
+			NewsDto dto = new NewsDto(n);
+			dto.setFiles(files.getOrDefault(n.getId(), List.of()));
+			return (INewsDto) dto;
+		}).toList();
 	}
 
 	@Override

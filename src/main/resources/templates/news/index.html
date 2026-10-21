@@ -37,6 +37,7 @@
                         </span>
                     </div>
                     <dl th:replace="~{fragment/review-fields :: review-fields(${reviewValues[post.id]})}"></dl>
+                    <ul th:replace="~{fragment/download-files :: files(${post.files})}"></ul>
                     <div class="article-content" th:utext="${post.content}"></div>
 
                 </div>

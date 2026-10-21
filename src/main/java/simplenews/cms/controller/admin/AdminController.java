@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import simplenews.cms.data.api.ICategoryDto;
 import simplenews.cms.data.dto.INewsDto;
 import simplenews.cms.data.dto.NewsDto;
 import simplenews.cms.security.PermissionEnum;
 import simplenews.cms.service.ICategoryService;
+import simplenews.cms.service.INewsFileService;
 import simplenews.cms.service.INewsService;
 import simplenews.cms.service.IPermissionService;
 import simplenews.cms.service.IReviewService;
@@ -57,6 +59,8 @@ public class AdminController {
 	IUserService userService;
 	@Autowired
 	IReviewService reviewService;
+	@Autowired
+	INewsFileService newsFileService;
 
 	@GetMapping
 	public String getAdmin(){
@@ -101,6 +105,7 @@ public class AdminController {
 	public String postArticleCreate(Model model,
 									@RequestParam(value = "action", defaultValue = "0") int action,
 									@ModelAttribute NewsDto post,
+									@RequestParam(value = "attachments", required = false) MultipartFile[] attachments,
 									HttpServletRequest httpServletRequest) {
 		String user = httpServletRequest.getUserPrincipal().getName();
 		Map<Long, String> reviewValues = reviewService.readValues(httpServletRequest.getParameterMap());
@@ -119,6 +124,11 @@ public class AdminController {
 			try {
 				INewsDto created = newsService.createNews(post, user);
 				reviewService.saveValues(created.getId(), reviewTypeId, reviewValues);
+				saveAttachments(created.getId(), attachments, List.of(), user, errors);
+				if (!errors.isEmpty()) {
+					return renderEditor(model, EDIT_ACTION, newsService.getNewsById(created.getId()),
+							reviewValues, errors, false);
+				}
 				return "redirect:/_private/admin/post-edit.html?id=" + created.getId();
 			} catch (InsufficientPermissionException e) {
 				LOG.warning(e.getMessage());
@@ -147,6 +157,8 @@ public class AdminController {
 	public String postArticleEdit(Model model,
 								  @RequestParam(value = "action", defaultValue = "0") int action,
 								  @ModelAttribute NewsDto post,
+								  @RequestParam(value = "attachments", required = false) MultipartFile[] attachments,
+								  @RequestParam(value = "removeFile", required = false) List<Long> removeFile,
 								  HttpServletRequest httpServletRequest,
 								  HttpServletResponse httpServletResponse) throws IOException {
 
@@ -174,6 +186,10 @@ public class AdminController {
 			try {
 				edited = newsService.updateNews(stored.getId(), post, user);
 				reviewService.saveValues(edited.getId(), reviewTypeId, reviewValues);
+				saveAttachments(edited.getId(), attachments, removeFile, user, errors);
+				if (errors.isEmpty()) {
+					edited = newsService.getNewsById(edited.getId());
+				}
 			} catch (InsufficientPermissionException e) {
 				LOG.warning(e.getMessage());
 				errors.add("You are not allowed to edit this post or move it to this category.");
@@ -197,8 +213,20 @@ public class AdminController {
 		model.addAttribute("categories", categories);
 		model.addAttribute("preview", preview);
 		model.addAttribute("previewContent", post.getContent() != null ? SanitizeUtil.sanitize(post.getContent()) : "");
+		model.addAttribute("attachments", post.getId() == null ? List.of() : newsFileService.getByNewsId(post.getId()));
 		addReviewEditor(model, values, errors);
 		return "admin/post-edit.html";
+	}
+
+	private void saveAttachments(Long newsId, MultipartFile[] attachments,
+								 List<Long> removeFile, String user, List<String> errors) {
+		try {
+			newsFileService.removeFiles(newsId, removeFile);
+			newsFileService.addFiles(newsId, attachments, user);
+		} catch (RuntimeException e) {
+			LOG.warning(e.toString());
+			errors.add(e.getMessage() != null ? e.getMessage() : "Could not store the file.");
+		}
 	}
 
 	private void addReviewEditor(Model model, Map<Long, String> values, List<String> errors) {

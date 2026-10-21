@@ -3,12 +3,20 @@ package simplenews.cms.service.util;
 import org.springframework.http.MediaType;
 import simplenews.cms.data.dto.UploadFileDto;
 
+import java.util.Locale;
 
 public class FileUtil {
-	public static String getFileExtension(String filename) {
-		return filename.substring(filename.lastIndexOf(".") + 1);
-		//TODO: maybe FileTypeDetector?
+
+	public enum Kind {
+		IMAGE, VIDEO, AUDIO, FILE
 	}
+
+	public static String getFileExtension(String filename) {
+		if (filename == null) return "";
+		int dot = filename.lastIndexOf('.');
+		return dot < 0 ? "" : filename.substring(dot + 1);
+	}
+
 	public static String getFileHash(byte[] digest) {
 		StringBuilder sb = new StringBuilder();
 
@@ -23,24 +31,39 @@ public class FileUtil {
 	}
 
 	public static boolean isImage(UploadFileDto file) {
-		MediaType type = getMediaType(file.getExtension());
-		return type.equals(MediaType.IMAGE_JPEG)
-				|| type.equals(MediaType.IMAGE_PNG)
-				|| type.equals(MediaType.IMAGE_GIF);
+		return kind(file.getExtension()) == Kind.IMAGE;
+	}
+
+	public static Kind kind(String ext) {
+		MediaType type = getMediaType(ext);
+		return switch (type.getType()) {
+			case "image" -> Kind.IMAGE;
+			case "video" -> Kind.VIDEO;
+			case "audio" -> Kind.AUDIO;
+			default -> Kind.FILE;
+		};
 	}
 
 	public static MediaType getMediaType(String ext) {
-		switch (ext) {
-			case "jpg":
-			case "jpeg":
-				return MediaType.IMAGE_JPEG;
-			case "png":
-				return MediaType.IMAGE_PNG;
-			case "gif":
-				return MediaType.IMAGE_GIF;
-			default:
-				return MediaType.APPLICATION_OCTET_STREAM;
-		}
+		if (ext == null) return MediaType.APPLICATION_OCTET_STREAM;
+		return switch (ext.toLowerCase(Locale.ROOT)) {
+			case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
+			case "png" -> MediaType.IMAGE_PNG;
+			case "gif" -> MediaType.IMAGE_GIF;
+			case "webp" -> MediaType.parseMediaType("image/webp");
+			case "bmp" -> MediaType.parseMediaType("image/bmp");
+			case "mp4" -> MediaType.parseMediaType("video/mp4");
+			case "webm" -> MediaType.parseMediaType("video/webm");
+			case "ogv" -> MediaType.parseMediaType("video/ogg");
+			case "mov" -> MediaType.parseMediaType("video/quicktime");
+			case "mp3" -> MediaType.parseMediaType("audio/mpeg");
+			case "wav" -> MediaType.parseMediaType("audio/wav");
+			case "ogg" -> MediaType.parseMediaType("audio/ogg");
+			case "m4a" -> MediaType.parseMediaType("audio/mp4");
+			case "aac" -> MediaType.parseMediaType("audio/aac");
+			case "flac" -> MediaType.parseMediaType("audio/flac");
+			default -> MediaType.APPLICATION_OCTET_STREAM;
+		};
 	}
 
 	public static String shorthash(String hash) {

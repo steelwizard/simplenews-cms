@@ -52,26 +52,16 @@ public class NewsService implements INewsService {
 	IPermissionService permissionService;
 	@Autowired
 	IUserCategoryService userCategoryService;
+	@Autowired
+	INewsFileService newsFileService;
 
 	@Cacheable("newsLatest")
 	public List<INewsDto> getNews(int limit, int offset) {
-		List<News> news = newsRepository.findByVisibleTrueOrderByLastModifiedDesc(limit, offset);
-		List<INewsDto> newsDtoList = new ArrayList<>();
-		news.forEach(n -> {
-			INewsDto dto = new NewsDto(n);
-			newsDtoList.add(dto);
-		});
-		return newsDtoList;
+		return toDtos(newsRepository.findByVisibleTrueOrderByLastModifiedDesc(limit, offset));
 	}
 	@Override
 	public List<INewsDto> getAllNewsAdmin(int limit, int offset) {
-		List<News> news = newsRepository.findOrderByLastModifiedDesc(limit, offset);
-		List<INewsDto> newsDtoList = new ArrayList<>();
-		news.forEach(n -> {
-			INewsDto dto = new NewsDto(n);
-			newsDtoList.add(dto);
-		});
-		return newsDtoList;
+		return toDtos(newsRepository.findOrderByLastModifiedDesc(limit, offset));
 	}
 	@Cacheable("news")
 	public INewsDto getNewsById(Long id) {
@@ -84,7 +74,7 @@ public class NewsService implements INewsService {
 		if (newsDto == null) {
 			Optional<News> newsOptional = newsRepository.findById(id);
 			if (newsOptional.isPresent()) {
-				newsDto = new NewsDto(newsOptional.get());
+				newsDto = toDto(newsOptional.get());
 //				getCache().put(newsDto.getId(), newsDto);
 			}
 		}
@@ -97,7 +87,7 @@ public class NewsService implements INewsService {
 		Optional<News> newsOptional = newsRepository.findByKey(key);
 		INewsDto newsDto = null;
 		if (newsOptional.isPresent()) {
-			newsDto = new NewsDto(newsOptional.get());
+			newsDto = toDto(newsOptional.get());
 		}
 		return newsDto;
 	}
@@ -111,15 +101,8 @@ public class NewsService implements INewsService {
 		if (category != null) {
 			news = newsRepository.findByCategoryAndVisibleTrueOrderByLastModifiedDesc(category.getId(), limit, offset);
 		}
-		List<INewsDto> newsDtoList = new ArrayList<>();
 		Collections.sort(news, Comparator.comparing(News::getLastModified).reversed()); // Why doesn't this work in the DB?
-		news.forEach(n -> {
-			INewsDto dto = new NewsDto(n);
-			newsDtoList.add(dto);
-			getCache().put(dto.getId(), dto);
-		});
-
-		return newsDtoList;
+		return toDtos(news);
 	}
 	@Override
 	@Cacheable("newsLatest")
@@ -128,15 +111,8 @@ public class NewsService implements INewsService {
 		List<News> news = new ArrayList<>();
 
 		news.addAll(newsRepository.findAllByCategoryIdIn(new HashSet<Long>(categoryIds), limit, offset));
-		List<INewsDto> newsDtoList = new ArrayList<>();
 		Collections.sort(news, Comparator.comparing(News::getLastModified).reversed()); // Why doesn't this work in the DB?
-		news.forEach(n -> {
-			INewsDto dto = new NewsDto(n);
-			newsDtoList.add(dto);
-			getCache().put(dto.getId(), dto);
-		});
-
-		return newsDtoList;
+		return toDtos(news);
 	}
 	@Override
 	public List<INewsDto> getNewsByCreatorAndCategories(String creator, List<Long> categoryIds, int limit, int offset) {
@@ -146,15 +122,8 @@ public class NewsService implements INewsService {
 		if (!categorySet.isEmpty()) {
 			news = newsRepository.findAllByCreatorAndCategoryIdIn(creator, categorySet, limit, offset);
 		}
-		List<INewsDto> newsDtoList = new ArrayList<>();
 		Collections.sort(news, Comparator.comparing(News::getLastModified).reversed()); // Why doesn't this work in the DB?
-		news.forEach(n -> {
-			INewsDto dto = new NewsDto(n);
-			newsDtoList.add(dto);
-			getCache().put(dto.getId(), dto);
-		});
-
-		return newsDtoList;
+		return toDtos(news);
 	}
 
 //	@Override
@@ -210,7 +179,7 @@ public class NewsService implements INewsService {
 				newsCreated.getTitle(),
 				newsCreated.getCategory().getName())
 		);
-		return new NewsDto(newsCreated);
+		return toDto(newsCreated);
 	}
 
 	@CacheEvict(cacheNames = {"news", "newsLatest"}, allEntries = true)
@@ -254,7 +223,7 @@ public class NewsService implements INewsService {
 				news.getTitle(),
 				news.getCategory().getName())
 		);
-		return new NewsDto(newsUpdated);
+		return toDto(newsUpdated);
 	}
 
 	@Override
@@ -266,6 +235,7 @@ public class NewsService implements INewsService {
 			throw new InsufficientPermissionException("Unauthorized article deletion by user "+userService.getCurrentUserName()+" for article id "+id);
 		}
 		newsFieldValueRepository.deleteByNews(id);
+		newsFileService.deleteByNews(id);
 		newsRepository.deleteById(id);
 		LOG.info("deleting post "+id);
 	}
@@ -276,6 +246,7 @@ public class NewsService implements INewsService {
 			throw new InsufficientPermissionException("Unauthorized article deletion by user "+userService.getCurrentUserName()+" for article id "+dto.getId());
 		}
 		newsFieldValueRepository.deleteByNews(dto.getId());
+		newsFileService.deleteByNews(dto.getId());
 		newsRepository.deleteById(dto.getId());
 	}
 
@@ -301,6 +272,23 @@ public class NewsService implements INewsService {
 			LOG.log(Level.FINE, "key "+newsDto.getKey()+"already exists");
 			newsDto.setKey(newsDto.getKey()+"-"+System.currentTimeMillis());
 		}
+	}
+
+	private NewsDto toDto(News news) {
+		NewsDto dto = new NewsDto(news);
+		dto.setFiles(newsFileService.getByNewsId(news.getId()));
+		return dto;
+	}
+
+	private List<INewsDto> toDtos(List<News> news) {
+		List<INewsDto> result = new ArrayList<>();
+		var files = newsFileService.getByNewsIds(news.stream().map(News::getId).toList());
+		for (News n : news) {
+			NewsDto dto = new NewsDto(n);
+			dto.setFiles(files.getOrDefault(n.getId(), List.of()));
+			result.add(dto);
+		}
+		return result;
 	}
 
 	private Cache getCache() {

@@ -32,13 +32,16 @@
         <select id="type-select" th:field="*{type}">
             <option value="NEWS">NEWS</option>
             <option value="REVIEW">REVIEW</option>
+            <option value="DOWNLOAD">DOWNLOAD</option>
         </select>
-        <label for="review-type-select">Review type: </label>
-        <select id="review-type-select" th:field="*{reviewType}">
-            <option th:value="${null}">---none---</option>
-            <option th:each="rt : ${reviewTypes}" th:value="${rt.id}" th:text="${rt.title}"></option>
-        </select>
-        <span th:if="${reviewTypes.isEmpty()}">(create one under <a th:href="@{/_private/admin/review-type-overview.html}">Reviews</a> first)</span>
+        <span id="review-type-fields">
+            <label for="review-type-select">Review type: </label>
+            <select id="review-type-select" th:field="*{reviewType}">
+                <option th:value="${null}">---none---</option>
+                <option th:each="rt : ${reviewTypes}" th:value="${rt.id}" th:text="${rt.title}"></option>
+            </select>
+            <span th:if="${reviewTypes.isEmpty()}">(create one under <a th:href="@{/_private/admin/review-type-overview.html}">Reviews</a> first)</span>
+        </span>
         <br>
         [&nbsp;
         <button type="submit">
@@ -52,5 +55,16 @@
         <br><br>
         <a style="color:red" th:href="@{category-delete.html?id={id}(id=${category.id})}">Delete</a>
     </form>
+    <script>
+        (function () {
+            var select = document.getElementById('type-select');
+            var review = document.getElementById('review-type-fields');
+            function update() {
+                if (review) review.style.display = select.value === 'REVIEW' ? '' : 'none';
+            }
+            select.addEventListener('change', update);
+            update();
+        })();
+    </script>
 </body>
 </html>

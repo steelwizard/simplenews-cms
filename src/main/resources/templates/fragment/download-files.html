@@ -1,0 +1,8 @@
+<ul th:fragment="files(files)" class="download-files" th:if="${files != null and !files.isEmpty()}">
+    <li th:each="f : ${files}">
+        <img th:if="${f.image}" th:src="@{${f.src}}" th:alt="${f.filename}">
+        <video th:if="${f.video}" th:src="@{${f.src}}" controls playsinline></video>
+        <audio th:if="${f.audio}" th:src="@{${f.src}}" controls></audio>
+        <a th:if="${f.file}" class="download-link" th:href="@{${f.url}}" th:download="${f.filename}">Download [[${f.filename}]]</a>
+    </li>
+</ul>

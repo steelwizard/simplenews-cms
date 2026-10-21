@@ -1,6 +1,7 @@
 package simplenews.cms.data.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface INewsDto {
 	Long getId();
@@ -51,6 +52,10 @@ public interface INewsDto {
 	void setMetaKeywords(String metaKeywords);
 	String getMetaDescription();
 	void setMetaDescription(String metaDescription);
+
+	default List<DownloadFileDto> getFiles() {
+		return List.of();
+	}
 
 	@Override
 	String toString();

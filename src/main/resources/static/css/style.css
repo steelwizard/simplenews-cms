@@ -196,3 +196,28 @@ display: block;
   height: 100%;
   background-color: rgb(65, 0, 0);
 }
+.download-files {
+  list-style: none;
+  padding: 0;
+  margin: 0 10px 10px 10px;
+}
+.download-link {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid black;
+  background-color: #EEE;
+  text-decoration: none;
+}
+.download-files img,
+.download-files video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 8px 0;
+}
+.download-files audio {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  margin: 8px 0;
+}

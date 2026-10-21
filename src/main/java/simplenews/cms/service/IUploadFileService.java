@@ -12,6 +12,7 @@ public interface IUploadFileService {
 
 	UploadFile upload(MultipartFile upload, String user);
 	File getFile(String filename);
+	File getDiskFile(Long id);
 	List<UploadFileDto> getUploadFiles(int limit, int offset);
 	boolean deleteById(Long id);
 }

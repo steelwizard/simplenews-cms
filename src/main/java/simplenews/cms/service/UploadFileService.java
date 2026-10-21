@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import simplenews.cms.data.dto.UploadFileDto;
 import simplenews.cms.data.dto.UserDto;
 import simplenews.cms.data.entity.UploadFile;
+import simplenews.cms.data.repository.NewsFileRepository;
 import simplenews.cms.data.repository.UploadFileRepository;
 import simplenews.cms.security.RoleEnum;
 import simplenews.cms.service.util.FileUtil;
@@ -45,6 +46,8 @@ public class UploadFileService implements IUploadFileService {
 
 	@Autowired
 	private UploadFileRepository uploadFileRepository;
+	@Autowired
+	private NewsFileRepository newsFileRepository;
 
 
 	public List<UploadFileDto> getUploadFiles(int limit, int offset) {
@@ -123,6 +126,22 @@ public class UploadFileService implements IUploadFileService {
 		return file;
 	}
 
+	@Override
+	public File getDiskFile(Long id) {
+		if (id == null) return null;
+		UploadFile file = uploadFileRepository.findById(id).orElse(null);
+		if (file == null) return null;
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(file.getCreated());
+		Path path = Paths.get(getBasePath(),
+				Integer.toString(cal.get(Calendar.YEAR)),
+				Integer.toString(cal.get(Calendar.MONTH) + 1),
+				FileUtil.shorthash(file.getHash()),
+				file.getFilename());
+		File disk = path.toFile();
+		return disk.isFile() ? disk : null;
+	}
+
 	private String getBasePath() {
 		if (uploadPath == null) {
 			String envProp = env.getProperty("cms.data.path");
@@ -174,6 +193,7 @@ public class UploadFileService implements IUploadFileService {
 		if (Files.exists(path) && !Files.isDirectory(path)) {
 			try {
 				Files.delete(path);
+				newsFileRepository.deleteByFileId(id);
 				uploadFileRepository.deleteById(id);
 				return true;
 			} catch (IOException e) {
