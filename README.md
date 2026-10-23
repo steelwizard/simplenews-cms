@@ -94,3 +94,22 @@ It has the following sections:
 * **User:** Can create posts in assigned categories. Can edit own posts.
 * **Editor** Can create posts and edit everyone's posts in assigned categories.
 * **Admin** Can create and edit all posts in all categories. Can manage system settings.
+
+## Article comments
+
+Comments are off until `cms.phpbb.enabled` is `true`. The site does not talk to the forum while they are off, and a published article does not get a thread until someone opens it.
+
+With comments on, an article shows **Discuss this article**. The first visit creates one topic in the forum and sends the reader there. Later visits go to that same topic. The reply count is whatever the forum last reported. If the forum or its database is down, the article still loads; only that discussion link answers that the forum is unavailable.
+
+The forum is served by the same address as the site, under `/forum` (http://localhost:8080/forum). It is not required for the rest of the site.
+
+One-time setup after `docker compose up`:
+
+1. Open http://localhost:8080/forum and sign in as `admin` / `adminadmin`. Change that password.
+2. Rename the first forum to something like "Article discussion", or create one. Its id is in the address bar (`f=2` on a fresh board). Put that id in `cms.phpbb.forum-id`.
+3. In `application.properties`, set `cms.phpbb.enabled=true`. The dev keys `dev-api-key` and `dev-webhook-key` already match the forum container. `cms.phpbb.base-url` is the public `/forum` address, and `cms.phpbb.site-url` is the public address of this site.
+4. Restart the CMS.
+
+The forum container creates the user `simplenews` and enables the SimpleNews discussion extension on startup. That user writes the opening post of each article topic. Leave guest posting off.
+
+An existing database volume will not create the `phpbb` database by itself. The forum container creates it on startup when Postgres is up. If that database is missing, only the forum keeps retrying.

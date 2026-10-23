@@ -1,0 +1,18 @@
+services:
+    simplenews.discussion.controller:
+        class: simplenews\discussion\controller\api
+        public: true
+        arguments:
+            - '@request'
+            - '@dbal.conn'
+            - '%core.root_path%'
+            - '%core.php_ext%'
+            - '%core.table_prefix%'
+
+    simplenews.discussion.listener:
+        class: simplenews\discussion\event\main_listener
+        arguments:
+            - '@dbal.conn'
+            - '%core.table_prefix%'
+        tags:
+            - { name: event.listener }

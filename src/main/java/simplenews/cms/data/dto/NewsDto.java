@@ -26,6 +26,10 @@ public class NewsDto implements INewsDto {
 	private Boolean visible;
 	private String metaKeywords;
 	private String metaDescription;
+	@JsonIgnore
+	private Long phpbbTopicId;
+	@JsonIgnore
+	private Integer phpbbReplyCount;
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	private List<DownloadFileDto> files = new ArrayList<>();
 
@@ -43,6 +47,8 @@ public class NewsDto implements INewsDto {
 		this.metaKeywords = news.getMetaKeywords();
 		this.metaDescription = news.getMetaDescription();
 		this.lastModifiedBy = news.getLastModifiedBy();
+		this.phpbbTopicId = news.getPhpbbTopicId();
+		this.phpbbReplyCount = news.getPhpbbReplyCount();
 	}
 
 	@Override
@@ -171,6 +177,28 @@ public class NewsDto implements INewsDto {
 		this.metaDescription = metaDescription;
 	}
 
+	@Override
+	@JsonIgnore
+	public Long getPhpbbTopicId() {
+		return phpbbTopicId;
+	}
+
+	@Override
+	public void setPhpbbTopicId(Long phpbbTopicId) {
+		this.phpbbTopicId = phpbbTopicId;
+	}
+
+	@Override
+	@JsonIgnore
+	public Integer getPhpbbReplyCount() {
+		return phpbbReplyCount == null ? 0 : phpbbReplyCount;
+	}
+
+	@Override
+	public void setPhpbbReplyCount(Integer phpbbReplyCount) {
+		this.phpbbReplyCount = phpbbReplyCount;
+	}
+
 	public List<DownloadFileDto> getFiles() {
 		return files;
 	}
@@ -195,6 +223,8 @@ public class NewsDto implements INewsDto {
 				.add("visible=" + visible)
 				.add("metaKeywords='" + metaKeywords + "'")
 				.add("metaDescription='" + metaDescription + "'")
+				.add("phpbbTopicId=" + phpbbTopicId)
+				.add("phpbbReplyCount=" + phpbbReplyCount)
 				.toString();
 	}
 }

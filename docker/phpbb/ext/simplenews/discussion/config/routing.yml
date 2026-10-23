@@ -1,0 +1,13 @@
+simplenews_discussion_create:
+    path: /simplenews/topics
+    methods: [POST]
+    defaults:
+        _controller: 'simplenews.discussion.controller:create'
+
+simplenews_discussion_update:
+    path: /simplenews/topics/{news_id}
+    methods: [POST]
+    defaults:
+        _controller: 'simplenews.discussion.controller:update'
+    requirements:
+        news_id: \d+

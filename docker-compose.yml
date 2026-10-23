@@ -19,6 +19,7 @@ services:
     image: varnish:9.1
     depends_on:
       - web
+      - forum
     ports:
       - "8080:80"
     environment:
@@ -53,10 +54,38 @@ services:
 
       volumes:
         - ./_data/postgres/:/var/lib/postgresql/
+        - ./docker/postgres/create-phpbb-db.sql:/docker-entrypoint-initdb.d/00-phpbb.sql
         - ./sql/news-init.sql:/docker-entrypoint-initdb.d/init.sql
       restart: always
       networks:
         - cms
+  forum:
+    build:
+      context: ./docker/phpbb
+    image: simplenews-phpbb
+    depends_on:
+      - data
+    expose:
+      - "80"
+    environment:
+      PHPBB_DBHOST: data
+      PHPBB_DBPORT: "5432"
+      PHPBB_DBUSER: postgres
+      PHPBB_DBPASS: postgres
+      PHPBB_DBNAME: phpbb
+      PHPBB_ADMIN_NAME: admin
+      PHPBB_ADMIN_PASSWORD: adminadmin
+      PHPBB_ADMIN_EMAIL: admin@example.com
+      SIMPLENEWS_API_KEY: dev-api-key
+      SIMPLENEWS_WEBHOOK_KEY: dev-webhook-key
+      SIMPLENEWS_WEBHOOK_URL: http://web:8080
+      SIMPLENEWS_BOT_USERNAME: simplenews
+    volumes:
+      - ./docker/phpbb/ext/simplenews:/opt/phpbb/ext/simplenews
+      - ./_data/phpbb:/var/phpbb-config
+    restart: always
+    networks:
+      - cms
 
 networks:
     cms:

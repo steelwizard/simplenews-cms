@@ -68,6 +68,8 @@ CREATE TABLE public.news (
 	"options" json NULL,
     meta_keywords varchar NULL,
     meta_description varchar NULL,
+    phpbb_topic_id bigint NULL,
+    phpbb_reply_count integer NOT NULL DEFAULT 0,
 	CONSTRAINT news_pk PRIMARY KEY (id),
 	CONSTRAINT news_un UNIQUE (key),
 	CONSTRAINT news_fk FOREIGN KEY (category) REFERENCES public.category(id)

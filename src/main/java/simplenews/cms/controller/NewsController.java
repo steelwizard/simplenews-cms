@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.view.RedirectView;
@@ -18,13 +19,20 @@ import simplenews.cms.service.IReviewService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import simplenews.cms.service.ISiteSettingService;
+import simplenews.cms.service.phpbb.DiscussionClosedException;
+import simplenews.cms.service.phpbb.PhpBbDiscussionService;
+import simplenews.cms.service.phpbb.PhpBbProperties;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Controller
 public class NewsController {
+
+	private static final Logger LOG = Logger.getLogger(NewsController.class.getName());
 
 	public static final int RESULT_LIMIT = 10;
 
@@ -36,6 +44,15 @@ public class NewsController {
 	ISiteSettingService siteSettingService;
 	@Autowired
 	IReviewService reviewService;
+	@Autowired
+	PhpBbProperties phpBbProperties;
+	@Autowired
+	PhpBbDiscussionService discussionService;
+
+	@ModelAttribute("discussionEnabled")
+	public boolean discussionEnabled() {
+		return phpBbProperties.isEnabled();
+	}
 
 	@GetMapping("index.html")
 	public String renderLatest(Model model, @RequestParam(name = "p", required = false) Integer p, HttpServletRequest req) {
@@ -142,6 +159,24 @@ public class NewsController {
 		model.addAttribute("page", -1);
 
 		return "news/article.html";
+	}
+
+	@GetMapping("discussion/{id:[0-9]+}")
+	public RedirectView discussion(@PathVariable Long id, HttpServletResponse res) throws IOException {
+		if (!phpBbProperties.isEnabled()) {
+			res.sendError(404);
+			return null;
+		}
+		try {
+			return new RedirectView(discussionService.open(id));
+		} catch (DiscussionClosedException | IllegalArgumentException ex) {
+			res.sendError(404);
+			return null;
+		} catch (RuntimeException ex) {
+			LOG.log(Level.WARNING, "Discussion for article " + id + " is unavailable.", ex);
+			res.sendError(503);
+			return null;
+		}
 	}
 
 	@GetMapping("index.json")

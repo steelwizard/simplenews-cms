@@ -6,7 +6,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import simplenews.cms.data.api.INews;
 import simplenews.cms.data.dto.INewsDto;
 import simplenews.cms.data.repository.NewsFieldValueRepository;
 import simplenews.cms.data.repository.NewsRepository;
@@ -16,6 +15,7 @@ import simplenews.cms.data.entity.Category;
 import simplenews.cms.data.entity.News;
 import simplenews.cms.service.exception.DuplicateKeyException;
 import simplenews.cms.service.exception.InsufficientPermissionException;
+import simplenews.cms.service.phpbb.PhpBbDiscussionService;
 import simplenews.cms.service.util.SanitizeUtil;
 
 import java.sql.Timestamp;
@@ -54,6 +54,8 @@ public class NewsService implements INewsService {
 	IUserCategoryService userCategoryService;
 	@Autowired
 	INewsFileService newsFileService;
+	@Autowired
+	PhpBbDiscussionService discussionService;
 
 	@Cacheable("newsLatest")
 	public List<INewsDto> getNews(int limit, int offset) {
@@ -162,6 +164,7 @@ public class NewsService implements INewsService {
 				newsCreated.getTitle(),
 				newsCreated.getCategory().getName())
 		);
+		syncDiscussion(() -> discussionService.afterSave(newsCreated, null, null, null));
 		return toDto(newsCreated);
 	}
 
@@ -188,6 +191,10 @@ public class NewsService implements INewsService {
 			throw new DuplicateKeyException("key already exists");
 		}
 
+		String previousTitle = news.getTitle();
+		String previousKey = news.getKey();
+		Boolean previousVisible = news.getVisible();
+
 		news.setTitle(newsDto.getTitle());
 		news.setCategory(categoryService.getCategoryByName(newsDto.getCategory()));
 		news.setLastModifiedBy(user);
@@ -206,17 +213,19 @@ public class NewsService implements INewsService {
 				news.getTitle(),
 				news.getCategory().getName())
 		);
+		syncDiscussion(() -> discussionService.afterSave(newsUpdated, previousTitle, previousKey, previousVisible));
 		return toDto(newsUpdated);
 	}
 
 	@Override
 	@CacheEvict(cacheNames = {"news", "newsLatest"}, allEntries = true)
 	public void deleteNews(Long id) throws InsufficientPermissionException {
-		INews newsDto = newsRepository.findById(id)
+		News news = newsRepository.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("Article doesn't exist"));
-		if(!permissionService.canDelete(new NewsDto(newsDto))) {
+		if(!permissionService.canDelete(new NewsDto(news))) {
 			throw new InsufficientPermissionException("Unauthorized article deletion by user "+userService.getCurrentUserName()+" for article id "+id);
 		}
+		syncDiscussion(() -> discussionService.afterDelete(news));
 		newsFieldValueRepository.deleteByNews(id);
 		newsFileService.deleteByNews(id);
 		newsRepository.deleteById(id);
@@ -228,9 +237,18 @@ public class NewsService implements INewsService {
 		if(!permissionService.canDelete(dto)) {
 			throw new InsufficientPermissionException("Unauthorized article deletion by user "+userService.getCurrentUserName()+" for article id "+dto.getId());
 		}
+		newsRepository.findById(dto.getId()).ifPresent(news -> syncDiscussion(() -> discussionService.afterDelete(news)));
 		newsFieldValueRepository.deleteByNews(dto.getId());
 		newsFileService.deleteByNews(dto.getId());
 		newsRepository.deleteById(dto.getId());
+	}
+
+	private void syncDiscussion(Runnable action) {
+		try {
+			action.run();
+		} catch (RuntimeException ex) {
+			LOG.log(Level.WARNING, "Article was saved, but the forum discussion was not updated.", ex);
+		}
 	}
 
 	private void processKey(NewsDto newsDto) {

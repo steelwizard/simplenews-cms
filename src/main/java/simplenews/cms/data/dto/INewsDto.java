@@ -53,6 +53,11 @@ public interface INewsDto {
 	String getMetaDescription();
 	void setMetaDescription(String metaDescription);
 
+	Long getPhpbbTopicId();
+	void setPhpbbTopicId(Long phpbbTopicId);
+	Integer getPhpbbReplyCount();
+	void setPhpbbReplyCount(Integer phpbbReplyCount);
+
 	default List<DownloadFileDto> getFiles() {
 		return List.of();
 	}

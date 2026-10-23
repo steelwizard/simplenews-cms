@@ -1,6 +1,7 @@
 package simplenews.cms.data.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import simplenews.cms.data.entity.News;
@@ -47,6 +48,10 @@ public interface NewsRepository extends JpaRepository<News, Long> {
 									 @Param("limit") int limit, @Param("offset") int offset);
 	Optional<News> findByKey(String key);
 	boolean existsByKey(String key);
+
+	@Modifying
+	@Query("UPDATE News n SET n.phpbbReplyCount = :count WHERE n.phpbbTopicId = :topicId")
+	int updateReplyCount(@Param("topicId") Long topicId, @Param("count") int count);
 
 	/**
 	 * Pass -1 as filterField and ratingField when unused; null parameters cannot be typed by Postgres here.

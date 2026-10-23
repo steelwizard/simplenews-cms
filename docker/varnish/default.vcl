@@ -15,7 +15,23 @@ backend default {
     }
 }
 
+# No health probe: phpBB answers /forum with redirects, and a failed probe
+# makes Varnish skip the backend entirely. A down forum fails only that request.
+backend forum {
+    .host = "forum";
+    .port = "80";
+    .connect_timeout = 2s;
+    .first_byte_timeout = 30s;
+    .between_bytes_timeout = 30s;
+}
+
 sub vcl_recv {
+    # phpBB keeps its own session. Do not cache it and do not send it to the CMS.
+    if (req.url ~ "^/forum($|[/?])") {
+        set req.backend_hint = forum;
+        return (pass);
+    }
+
     if (req.method != "GET" && req.method != "HEAD") {
         return (pass);
     }

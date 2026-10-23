@@ -1,0 +1,21 @@
+{
+    "name": "simplenews/discussion",
+    "type": "phpbb-extension",
+    "description": "Opens a forum topic for each published SimpleNews article.",
+    "version": "1.0.0",
+    "license": "GPL-2.0-only",
+    "authors": [
+        {
+            "name": "SimpleNews"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "extra": {
+        "display-name": "SimpleNews discussion",
+        "soft-require": {
+            "phpbb/phpbb": ">=3.3.0,<3.4.0@dev"
+        }
+    }
+}

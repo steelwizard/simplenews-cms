@@ -55,6 +55,12 @@ public class News implements INews {
 	@Column(name = "meta_description")
 	private String metaDescription;
 
+	@Column(name = "phpbb_topic_id")
+	private Long phpbbTopicId;
+
+	@Column(name = "phpbb_reply_count", nullable = false)
+	private Integer phpbbReplyCount = 0;
+
 	@Override
 	public Long getId() {
 		return id;
@@ -172,6 +178,26 @@ public class News implements INews {
 	}
 
 	@Override
+	public Long getPhpbbTopicId() {
+		return phpbbTopicId;
+	}
+
+	@Override
+	public void setPhpbbTopicId(Long phpbbTopicId) {
+		this.phpbbTopicId = phpbbTopicId;
+	}
+
+	@Override
+	public Integer getPhpbbReplyCount() {
+		return phpbbReplyCount;
+	}
+
+	@Override
+	public void setPhpbbReplyCount(Integer phpbbReplyCount) {
+		this.phpbbReplyCount = phpbbReplyCount;
+	}
+
+	@Override
 	public String toString() {
 		return new StringJoiner(", ", News.class.getSimpleName() + "[", "]")
 				.add("id=" + id)
@@ -186,6 +212,8 @@ public class News implements INews {
 				.add("visible=" + visible)
 				.add("metaKeywords='" + metaKeywords + "'")
 				.add("metaDescription='" + metaDescription + "'")
+				.add("phpbbTopicId=" + phpbbTopicId)
+				.add("phpbbReplyCount=" + phpbbReplyCount)
 				.toString();
 	}
 }

@@ -36,6 +36,10 @@ a {
   margin: 0 10px;
 }
 
+.article-discussion {
+  margin: 10px;
+}
+
 .read-more {
   display: block;
   margin: 8px 10px 0;

@@ -50,6 +50,11 @@ public interface INews {
 	String getMetaDescription();
 	void setMetaDescription(String metaDescription);
 
+	Long getPhpbbTopicId();
+	void setPhpbbTopicId(Long phpbbTopicId);
+	Integer getPhpbbReplyCount();
+	void setPhpbbReplyCount(Integer phpbbReplyCount);
+
 	@Override
 	String toString();
 }

@@ -48,6 +48,7 @@ public class NavigationService implements INavigationService {
 	private static final Logger LOG = Logger.getLogger(NavigationService.class.getName());
 	public static final String NAVIGATION_CACHE = "navigation";
 	private static final String SEEDED_SETTING = "navigation.seeded";
+	private static final String FORUM_LINK_SETTING = "navigation.forum";
 	private static final String AUTO_CATEGORY_SETTING = "navigation.autoCategories";
 	private static final String AUTO_PAGE_SETTING = "navigation.autoPages";
 	private static final String AUTO_OFF = "OFF";
@@ -221,18 +222,46 @@ public class NavigationService implements INavigationService {
 	@Transactional
 	@CacheEvict(cacheNames = NAVIGATION_CACHE, allEntries = true)
 	public void seedDefaults() {
-		if (siteSettingRepository.existsById(SEEDED_SETTING)) return;
-		if (navigationRepository.count() == 0) {
-			Timestamp now = new Timestamp(System.currentTimeMillis());
-			NavigationItem home = seedItem(NavigationMenuEnum.HEADER, 0, "Home", NavigationTypeEnum.NEWS_INDEX, now);
-			navigationRepository.save(home);
-			navigationRepository.save(seedItem(NavigationMenuEnum.SIDEBAR, 0, null, NavigationTypeEnum.CATEGORY_TREE, now));
-			LOG.info("Created default navigation.");
+		if (!siteSettingRepository.existsById(SEEDED_SETTING)) {
+			if (navigationRepository.count() == 0) {
+				Timestamp now = new Timestamp(System.currentTimeMillis());
+				navigationRepository.save(seedItem(NavigationMenuEnum.HEADER, 0, "Home", NavigationTypeEnum.NEWS_INDEX, now));
+				navigationRepository.save(forumLink(1, now));
+				navigationRepository.save(seedItem(NavigationMenuEnum.SIDEBAR, 0, null, NavigationTypeEnum.CATEGORY_TREE, now));
+				LOG.info("Created default navigation.");
+			}
+			SiteSetting flag = new SiteSetting();
+			flag.setKey(SEEDED_SETTING);
+			flag.setValue("true");
+			siteSettingRepository.save(flag);
+		}
+		ensureForumLink();
+	}
+
+	private void ensureForumLink() {
+		if (siteSettingRepository.existsById(FORUM_LINK_SETTING)) return;
+		List<NavigationItem> header = navigationRepository.findByMenuOrderByPositionAscIdAsc(NavigationMenuEnum.HEADER);
+		boolean present = header.stream().anyMatch(item ->
+				item.getType() == NavigationTypeEnum.URL && "/forum".equals(item.getUrl()));
+		if (!present) {
+			int position = header.stream()
+					.filter(item -> item.getParent() == null)
+					.mapToInt(NavigationItem::getPosition)
+					.max()
+					.orElse(-1) + 1;
+			navigationRepository.save(forumLink(position, new Timestamp(System.currentTimeMillis())));
+			LOG.info("Added the forum link to the header.");
 		}
 		SiteSetting flag = new SiteSetting();
-		flag.setKey(SEEDED_SETTING);
+		flag.setKey(FORUM_LINK_SETTING);
 		flag.setValue("true");
 		siteSettingRepository.save(flag);
+	}
+
+	private NavigationItem forumLink(int position, Timestamp now) {
+		NavigationItem forum = seedItem(NavigationMenuEnum.HEADER, position, "Forum", NavigationTypeEnum.URL, now);
+		forum.setUrl("/forum");
+		return forum;
 	}
 
 	@Override

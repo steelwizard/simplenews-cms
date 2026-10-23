@@ -41,6 +41,16 @@
                     <div class="article-content" th:utext="${post.content}"></div>
                     <br>
                     Permalink: <a th:href="@{${permaLink}}">[[${permaLink}]]</a>
+                    <p class="article-discussion" th:if="${discussionEnabled}">
+                        <a th:href="@{|/discussion/${post.id}|}">
+                            <th:block th:if="${post.phpbbTopicId != null}">
+                                [[${post.phpbbReplyCount}]]
+                                <span th:text="${post.phpbbReplyCount == 1} ? 'comment' : 'comments'">comments</span>
+                                —
+                            </th:block>
+                            Discuss this article
+                        </a>
+                    </p>
                 </div>
                 <div class="news-container" th:if="${newslist.isEmpty()}">
                     No results found.
