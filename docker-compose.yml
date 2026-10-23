@@ -4,14 +4,41 @@ services:
       context: .
       dockerfile: Dockerfile
     image: cms
-    ports:
-      - "8080:8080"
     volumes:
       - ./_data/cms/:/opt/cms/
       - ./application.properties:/opt/cms/application.properties
     environment:
       # Import optional host file over classpath defaults (do not use spring.config.location — it replaces classpath config and drops packaged defaults).
       - SPRING_CONFIG_IMPORT=optional:file:/opt/cms/application.properties
+    expose:
+      - "8080"
+    restart: always
+    networks:
+      - cms
+  varnish:
+    image: varnish:9.1
+    depends_on:
+      - web
+    ports:
+      - "8080:80"
+    environment:
+      VARNISH_SIZE: 256M
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    tmpfs:
+      - /var/lib/varnish/varnishd:exec
+    volumes:
+      - ./docker/varnish/default.vcl:/etc/varnish/default.vcl:ro
+    # Passed uploads can be large; the default body timeouts are too short for that.
+    command:
+      - "-p"
+      - "first_byte_timeout=600"
+      - "-p"
+      - "between_bytes_timeout=600"
+      - "-p"
+      - "send_timeout=600"
     restart: always
     networks:
       - cms
