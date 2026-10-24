@@ -1,4 +1,4 @@
-FROM openjdk:22-jdk-slim
+FROM eclipse-temurin:25-jre
 ARG JAR_FILE=/target/cms*.jar
 
 RUN useradd -u 1000 cms

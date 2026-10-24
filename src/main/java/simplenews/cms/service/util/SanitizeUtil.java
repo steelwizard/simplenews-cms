@@ -6,7 +6,6 @@ import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
 
 public class SanitizeUtil {
-	//TODO: This sanitizer library seems to have vulnerable dependency. Replace it they don't update it.
 	private static final AttributePolicy POSITIVE_INT = new AttributePolicy() {
 		public String apply(String elementName, String attributeName, String value) {
 			int n = value.length();
